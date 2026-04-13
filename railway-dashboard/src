@@ -1,0 +1,15 @@
+cd config
+New-Item db.js
+cd ..
+
+cd controllers
+New-Item uploadController.js
+cd ..
+
+cd routes
+New-Item uploadRoutes.js
+cd ..
+
+cd middleware
+New-Item uploadMiddleware.js
+cd ..

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.05;
+            pointer-events: none;
+        }
+
+        .railway-logo {
+            position: absolute;
+            font-size: 150px;
+            color: white;
+        }
+
+        .railway-logo:nth-child(1) {
+            top: 5%;
+            left: 5%;
+        }
+
+        .railway-logo:nth-child(2) {
+            top: 30%;
+            right: 10%;
+        }
+
+        .railway-logo:nth-child(3) {
+            bottom: 20%;
+            left: 15%;
+        }
+
+        .railway-logo:nth-child(4) {
+            bottom: 5%;
+            right: 5%;
+        }
+
+        .railway-logo:nth-child(5) {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #e94560;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: #1a1a2e;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .page {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 5% 60px;
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span {
+            color: #e94560;
+        }
+
+        .hero p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .hero-buttons .btn {
+            padding: 15px 35px;
+            font-size: 1rem;
+        }
+
+        .features {
+            padding: 80px 5%;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .section-title {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .feature-icon svg {
+            width: 35px;
+            height: 35px;
+            fill: white;
+        }
+
+        .feature-card h3 {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .login-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #e94560;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .remember-me input {
+            width: 18px;
+            height: 18px;
+            accent-color: #e94560;
+        }
+
+        .forgot-password {
+            color: #e94560;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .divider span {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .social-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .signup-link {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .signup-link a {
+            color: #e94560;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Upload Page Framework */
+        .upload-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+        }
+
+        .upload-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .upload-box h2 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .upload-box select {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .upload-box select option {
+            background: #16213e;
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 50px 20px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #e94560;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .upload-area p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 40px 5%;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        footer p {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+
+            .nav-links,
+            .nav-buttons {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .hero-buttons .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .login-box,
+            .upload-box {
+                padding: 40px 25px;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background: rgba(26, 26, 46, 0.98);
+                backdrop-filter: blur(20px);
+                padding: 80px 30px;
+                transition: right 0.3s;
+                z-index: 999;
+            }
+
+            .mobile-menu.active {
+                right: 0;
+            }
+
+            .mobile-menu .nav-links {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .mobile-menu .nav-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .mobile-menu .btn {
+                text-align: center;
+            }
+
+            .close-menu {
+                position: absolute;
+                top: 25px;
+                right: 25px;
+                font-size: 30px;
+                color: white;
+                cursor: pointer;
+                background: none;
+                border: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .feature-card {
+                padding: 30px 20px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div
+        style="background-image: url('https://unsplash.com/photos/red-locomotive-electric-with-a-freight-train-at-high-speed-rides-by-rail-uzDaaHDeSEM'); width: 100%; height: 400px;">
+        Content goes here
+    </div>
+
+    <div class="bg-pattern">
+        <div class="railway-logo"></div>
+        <div class="railway-logo"></div>
+        <div class="railway-logo"></div>
+        <div class="railway-logo"></div>
+        <div class="railway-logo"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="#" class="logo" onclick="showPage('home')">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12 2C8 2 5 3 5 7v9c0 2.2 1.8 4 4 4l-1 2h8l-1-2c2.2 0 4-1.8 4-4V7c0-4-3-5-7-5zm-2 14c-.8 0-1.5-.7-1.5-1.5S9.2 13 10 13s1.5.7 1.5 1.5S10.8 16 10 16zm4 0c-.8 0-1.5-.7-1.5-1.5S13.2 13 14 13s1.5.7 1.5 1.5S14.8 16 14 16zm3-6H7V7c0-2 1.5-3 5-3s5 1 5 3v3z" />
+            </svg>
+            RailwayGo
+        </a>
+        <ul class="nav-links">
+            <li><a href="#" onclick="showPage('home')">HOME</a></li>
+            <li><a href="#">INDEX MENU</a></li>
+            <li><a href="#">INDEX 1</a></li>
+            <li><a href="#">INDEX 2</a></li>
+        </ul>
+        <div class="nav-buttons">
+            <a href="#" class="btn btn-outline" onclick="showPage('login')">Login</a>
+            <a href="#" class="btn btn-primary">Sign Up</a>
+        </div>
+        <div class="menu-toggle" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="close-menu" onclick="toggleMobileMenu()">×</button>
+        <ul class="nav-links">
+            <li><a href="#" onclick="showPage('home'); toggleMobileMenu();">HOME</a></li>
+            <li><a href="#" onclick="toggleMobileMenu();">INDEX MENU</a></li>
+            <li><a href="#" onclick="toggleMobileMenu();">INDEX 1</a></li>
+            <li><a href="#" onclick="toggleMobileMenu();">INDEX 2</a></li>
+        </ul>
+
+    </div>
+
+    <!-- Home Page -->
+    <div class="page active" id="homePage">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Travel Smarter with <span>RailwayGo</span></h1>
+                <p>Upload and manage your track data securely. Select between Excel spreadsheets and PPT presentations
+                    with our centralized portal.</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary" onclick="showPage('upload')">Upload Data</a>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <h2 class="section-title">Our Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                        </svg>
+                    </div>
+                    <h3>Live Tracking</h3>
+                    <p>Track your train in real-time with precise GPS location and estimated arrival times for any
+                        station.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z" />
+                        </svg>
+                    </div>
+                    <h3>Excel Sync</h3>
+                    <p>Easily upload your .xlsx spreadsheets directly into our system for seamless data syncing and
+                        processing.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                        </svg>
+                    </div>
+                    <h3>PPT Integration</h3>
+                    <p>Manage .pptx presentation formats alongside your data to prepare dynamic reports quickly
+                        securely.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div style="display: flex; justify-content: center; gap: 25px; margin-bottom: 20px; flex-wrap: wrap;">
+                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;"
+                    onclick="showPage('home')">1 Home</a>
+                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;">2
+                    Index</a>
+                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;">3
+                    Index1</a>
+                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;">4
+                    Index2</a>
+            </div>
+            <p>&copy; 2026 RailwayGo. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Login Page -->
+    <div class="page" id="loginPage">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-header">
+                    <svg viewBox="0 0 24 24" fill="#e94560">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                    </svg>
+                    <h2>Welcome Back</h2>
+                    <p>Login to your account</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox">
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button class="btn btn-primary login-btn">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Page -->
+    <div class="page" id="uploadPage">
+        <div class="upload-container">
+            <div class="upload-box">
+                <h2>Upload Data</h2>
+                <div class="form-group" style="text-align: left;">
+                    <label for="dataType"
+                        style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.8);">Select Format:</label>
+                    <select id="dataType">
+                        <option value="excel">Excel Format (.xlsx, .xls)</option>
+                        <option value="ppt">PowerPoint Format (.pptx, .ppt)</option>
+                    </select>
+                </div>
+
+                <input type="file" id="fileInput" style="display: none;" accept=".xlsx,.xls,.pptx,.ppt">
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <svg viewBox="0 0 24 24" fill="#e94560" width="50" height="50" style="margin-bottom: 10px;">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    <p id="uploadText">Drag & drop your file here or click to browse</p>
+                </div>
+
+                <button class="btn btn-primary upload-btn" id="uploadBtn">Upload File</button>
+                <p id="uploadStatus" style="margin-top: 15px; color: white;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts for Interaction -->
+    <script>
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            const page = document.getElementById(pageId + 'Page');
+            if (page) {
+                page.classList.add('active');
+            } else {
+                alert(pageId.toUpperCase() + ' page is currently under construction!');
+                document.getElementById('homePage').classList.add('active');
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('active');
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadText = document.getElementById('uploadText');
+        const uploadStatus = document.getElementById('uploadStatus');
+        let selectedFile = null;
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.style.borderColor = '#e94560';
+                uploadArea.style.background = 'rgba(255, 255, 255, 0.08)';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                uploadArea.style.background = 'transparent';
+            }, false);
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            handleFiles(files);
+        }, false);
+
+        fileInput.addEventListener('change', function(e) {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                selectedFile = files[0];
+                uploadText.textContent = `Selected: ${selectedFile.name}`;
+            }
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                uploadStatus.textContent = 'Please select a file first.';
+                uploadStatus.style.color = '#ff6b6b';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            uploadStatus.textContent = 'Uploading...';
+            uploadStatus.style.color = 'white';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    uploadStatus.textContent = 'File uploaded successfully!';
+                    uploadStatus.style.color = '#4caf50';
+                    setTimeout(() => {
+                        selectedFile = null;
+                        uploadText.textContent = 'Drag & drop your file here or click to browse';
+                        uploadStatus.textContent = '';
+                        fileInput.value = '';
+                    }, 3000);
+                } else {
+                    uploadStatus.textContent = `Error: ${result.message || 'Upload failed'}`;
+                    uploadStatus.style.color = '#ff6b6b';
+                }
+            } catch (error) {
+                uploadStatus.textContent = 'Error connecting to server. Is the backend running?';
+                uploadStatus.style.color = '#ff6b6b';
+            }
+        });
+    </script>
+</body>
+
+</html>
