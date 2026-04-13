@@ -1,830 +1,1148 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Railway Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <title>Railway Intelligence System</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        :root {
+            --primary: #4facfe;
+            --secondary: #00f2fe;
+            --primary-dark: #0284c7;
+            --bg-color: #f8fafc;
+            --panel-bg: rgba(255, 255, 255, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.8);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --transition-speed: 0.3s;
+        }
+
+        body.dark-mode {
+            --primary: #38bdf8;
+            --secondary: #0ea5e9;
+            --bg-color: #0b1120;
+            --panel-bg: rgba(15, 23, 42, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-dark: #f1f5f9;
+            --text-muted: #94a3b8;
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            position: relative;
-            overflow-x: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        .bg-pattern {
+        /* Ambient Animated Gradient Background */
+        .ambient-background {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            opacity: 0.05;
-            pointer-events: none;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            transition: opacity 0.5s ease;
         }
-
-        .railway-logo {
+        .ambient-background::before, .ambient-background::after {
+            content: '';
             position: absolute;
-            font-size: 150px;
-            color: white;
+            width: 60vw; height: 60vw;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.2;
+            animation: floatBg 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .ambient-background::before {
+            background: var(--primary);
+            top: -20%; left: -10%;
+        }
+        .ambient-background::after {
+            background: var(--secondary);
+            bottom: -20%; right: -10%;
+            animation-delay: -10s;
+        }
+        body.dark-mode .ambient-background::before,
+        body.dark-mode .ambient-background::after {
+            opacity: 0.15;
+            filter: blur(150px);
+        }
+        @keyframes floatBg {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(10%, 15%) scale(1.1); }
         }
 
-        .railway-logo:nth-child(1) {
-            top: 5%;
-            left: 5%;
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--glass-shadow);
         }
 
-        .railway-logo:nth-child(2) {
-            top: 30%;
-            right: 10%;
+        .hover-lift {
+            transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), box-shadow var(--transition-speed) ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .railway-logo:nth-child(3) {
-            bottom: 20%;
-            left: 15%;
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            height: 100vh;
         }
 
-        .railway-logo:nth-child(4) {
-            bottom: 5%;
-            right: 5%;
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--panel-border);
+            z-index: 20;
+            transition: width var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), transform var(--transition-speed);
+        }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .brand-text, .sidebar.collapsed .nav-text { display: none; }
+        .sidebar-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--panel-border);
+            white-space: nowrap;
+        }
+        .sidebar-header i { color: var(--primary); font-size: 1.5rem; margin-right: 15px; }
+        
+        .nav-links { list-style: none; padding: 20px 0; overflow-y: auto; overflow-x: hidden; }
+        .nav-links li { margin-bottom: 5px; padding: 0 15px; }
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            white-space: nowrap;
+        }
+        .nav-links a i { width: 24px; text-align: center; font-size: 1.1rem; margin-right: 15px; }
+        .nav-links a:hover, .nav-links li.active a {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.15), rgba(0, 242, 254, 0.15));
+            color: var(--primary);
         }
 
-        .railway-logo:nth-child(5) {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+            scroll-behavior: smooth;
         }
 
-        nav {
-            position: fixed;
+        /* Topbar */
+        .topbar {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            border-bottom: 1px solid var(--panel-border);
+            position: sticky;
             top: 0;
+            z-index: 10;
+        }
+        .topbar-left, .topbar-right { display: flex; align-items: center; gap: 20px; }
+        .icon-btn {
+            background: rgba(0,0,0,0.03);
+            border: 1px solid var(--panel-border);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-dark);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        body.dark-mode .icon-btn { background: rgba(255,255,255,0.05); }
+        .icon-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .topbar-nav {
+            display: flex;
+            gap: 20px;
+        }
+        .topbar-nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 0;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .topbar-nav a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: -2px; left: 0;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        .topbar-nav a:hover { color: var(--text-dark); }
+        .topbar-nav a:hover::after { width: 100%; }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.03);
+            border: 1px solid var(--panel-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            width: 300px;
+            transition: all 0.3s;
+        }
+        body.dark-mode .search-bar { background: rgba(255,255,255,0.05); }
+        .search-bar:focus-within {
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.3);
+            border-color: var(--primary);
+            width: 350px;
+        }
+        .search-bar i { color: var(--text-muted); margin-right: 10px; }
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
             width: 100%;
-            padding: 20px 5%;
+            color: var(--text-dark);
+        }
+
+        .badge {
+            position: absolute;
+            top: -2px; right: -2px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: bold;
+            width: 18px; height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--bg-color);
+        }
+
+        .profile-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Dashboard Content */
+        .dashboard-content { padding: 30px; max-width: 1600px; margin: 0 auto; width: 100%; }
+        
+        /* Fade-in Animation */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Section */
+        .hero-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .logo svg {
-            width: 40px;
-            height: 40px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #e94560;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 10px 25px;
-            border-radius: 25px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: white;
-        }
-
-        .btn-outline:hover {
-            background: white;
-            color: #1a1a2e;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #e94560, #ff6b6b);
-            border: none;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
-        }
-
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-        }
-
-        .menu-toggle span {
-            width: 25px;
-            height: 3px;
-            background: white;
-            border-radius: 2px;
-            transition: 0.3s;
-        }
-
-        .page {
-            display: none;
-            min-height: 100vh;
+            padding: 40px 50px;
+            border-radius: 24px;
+            margin-bottom: 30px;
             position: relative;
-            z-index: 1;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
         }
-
-        .page.active {
-            display: block;
+        body.dark-mode .hero-section { background: linear-gradient(135deg, rgba(15,23,42,0.4) 0%, rgba(15,23,42,0.1) 100%); }
+        .hero-text { flex: 1; z-index: 2; }
+        .hero-text h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            min-height: 44px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 120px 5% 60px;
+        body.dark-mode .hero-text h1 {
+            background: linear-gradient(135deg, var(--primary), white);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        .hero-content {
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
             max-width: 600px;
         }
 
-        .hero h1 {
-            font-size: 3.5rem;
+        /* 3D AI Orb */
+        .ai-orb-container {
+            width: 250px; height: 250px;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 2;
+        }
+        .ai-orb {
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #00f2fe, #4facfe, #001a4d);
+            box-shadow: 0 10px 40px rgba(0, 242, 254, 0.5), inset 0 -10px 20px rgba(0,0,0,0.2), inset 0 10px 20px rgba(255,255,255,0.9);
+            animation: orbitFloat 4s ease-in-out infinite, pulseOuterGlow 2s infinite alternate;
+        }
+        body.dark-mode .ai-orb {
+            background: radial-gradient(circle at 30% 30%, #ffffff, #38bdf8, #0ea5e9, #020617);
+        }
+        @keyframes orbitFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(3deg); }
+        }
+        @keyframes pulseOuterGlow {
+            0% { box-shadow: 0 0 20px rgba(79, 172, 254, 0.3), inset 0 0 10px rgba(255,255,255,0.5); }
+            100% { box-shadow: 0 0 60px rgba(79, 172, 254, 0.7), inset 0 0 25px rgba(255,255,255,0.9); }
+        }
+
+        /* Buttons & Ripples */
+        .btn {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            line-height: 1.2;
-            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(79, 172, 254, 0.4);
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-anim 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        @keyframes ripple-anim {
+            to { transform: scale(4); opacity: 0; }
         }
 
-        .hero h1 span {
-            color: #e94560;
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(160,160,160,0.1) 25%, rgba(160,160,160,0.2) 50%, rgba(160,160,160,0.1) 75%);
+            background-size: 200% 100%;
+            animation: skeletonLoading 1.5s infinite;
+            color: transparent !important;
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
+        .skeleton * { visibility: hidden !important; }
+        @keyframes skeletonLoading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
-        .hero p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.1rem;
-            line-height: 1.8;
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
             margin-bottom: 30px;
         }
-
-        .hero-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .hero-buttons .btn {
-            padding: 15px 35px;
-            font-size: 1rem;
-        }
-
-        .features {
-            padding: 80px 5%;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .section-title {
-            text-align: center;
-            color: white;
-            font-size: 2.5rem;
-            margin-bottom: 50px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .stat-card {
+            padding: 24px;
             border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
         }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .feature-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #e94560, #ff6b6b);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-        }
-
-        .feature-icon svg {
-            width: 35px;
-            height: 35px;
-            fill: white;
-        }
-
-        .feature-card h3 {
-            color: white;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-        }
-
-        .feature-card p {
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.7;
-        }
-
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 120px 20px 60px;
-        }
-
-        .login-box {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 30px;
-            padding: 50px 40px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .login-header svg {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 20px;
-        }
-
-        .login-header h2 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-
-        .login-header p {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            transition: border-color 0.3s, background 0.3s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #e94560;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .form-options {
+        .stat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        .stat-desc { font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+        .text-success { color: #10b981; }
+        .text-danger { color: #ef4444; }
+        
+        .pulse-indicator {
+            width: 12px; height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulseActive 2s infinite;
+        }
+        @keyframes pulseActive {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            animation: floatBadge 3s infinite ease-in-out;
+        }
+        @keyframes floatBadge {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
             margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 10px;
         }
-
-        .remember-me {
+        .chart-large { grid-column: span 2; }
+        .chart-card {
+            padding: 24px;
+            border-radius: 20px;
             display: flex;
+            flex-direction: column;
+        }
+        .chart-card h3 {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            min-height: 250px;
+        }
+
+        /* Upload / Sync Area */
+        .upload-section {
+            padding: 30px;
+            border-radius: 24px;
+            margin-bottom: 30px;
+        }
+        .upload-header { margin-bottom: 15px; }
+        .upload-header h3 { font-size: 1.2rem; margin-bottom: 5px; color: var(--text-dark); }
+        .upload-header p { color: var(--text-muted); font-size: 0.9rem; }
+        .dropzone {
+            border: 2px dashed rgba(79, 172, 254, 0.5);
+            background: rgba(79, 172, 254, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dropzone:hover, .dropzone.dragover {
+            background: rgba(79, 172, 254, 0.15);
+            border-color: var(--primary);
+            transform: scale(1.01);
+        }
+        .dropzone i { font-size: 3rem; color: var(--primary); margin-bottom: 15px; }
+        .dropzone p { color: var(--text-dark); font-weight: 500; font-size: 1.1rem; }
+        .dropzone span { color: var(--primary); text-decoration: underline; }
+
+        /* AI Chatbot */
+        .chatbot-container {
+            position: fixed;
+            bottom: 90px;
+            right: 30px;
+            width: 360px;
+            height: 550px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            transform: scale(0) translateY(50px);
+            opacity: 0;
+            transform-origin: bottom right;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+            overflow: hidden;
+            border: 1px solid var(--panel-border);
+        }
+        .chatbot-container.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 18px 24px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            font-size: 1.05rem;
         }
-
-        .remember-me input {
-            width: 18px;
-            height: 18px;
-            accent-color: #e94560;
+        .ai-mini-orb {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 10px white;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 12px;
+            animation: pulseOuterGlow 2s infinite alternate;
         }
-
-        .forgot-password {
-            color: #e94560;
-            text-decoration: none;
+        .chat-close { background: transparent; border: none; color: white; cursor: pointer; font-size: 1.2rem; }
+        .chat-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .chat-msg {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            animation: fadeSlideUp 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .ai-msg {
+            background: rgba(79, 172, 254, 0.1);
+            color: var(--text-dark);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            border: 1px solid var(--panel-border);
+        }
+        .user-msg {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+        .chat-chips {
+            padding: 0 20px 15px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .chat-chips::-webkit-scrollbar { display: none; }
+        .chip {
+            background: var(--bg-color);
+            border: 1px solid var(--panel-border);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
             font-weight: 500;
         }
-
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-        }
-
-        .divider {
+        .chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .chat-input {
+            padding: 16px 20px;
+            border-top: 1px solid var(--panel-border);
             display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 12px;
+            background: var(--panel-bg);
         }
-
-        .divider::before,
-        .divider::after {
-            content: '';
+        .chat-input input {
             flex: 1;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .divider span {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.9rem;
-        }
-
-        .social-login {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .social-btn {
-            flex: 1;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .social-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .social-btn svg {
-            width: 24px;
-            height: 24px;
-        }
-
-        .signup-link {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .signup-link a {
-            color: #e94560;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .signup-link a:hover {
-            text-decoration: underline;
-        }
-
-        /* Upload Page Framework */
-        .upload-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 120px 20px 60px;
-        }
-
-        .upload-box {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 30px;
-            padding: 50px 40px;
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        .upload-box h2 {
-            color: white;
-            font-size: 2rem;
-            margin-bottom: 20px;
-        }
-
-        .upload-box select {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 12px;
-            font-size: 1rem;
+            padding: 12px 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: var(--bg-color);
+            color: var(--text-dark);
             outline: none;
-            cursor: pointer;
+            transition: border 0.3s;
         }
-
-        .upload-box select option {
-            background: #16213e;
+        body.dark-mode .chat-input input { border-color: rgba(255,255,255,0.1); }
+        .chat-input input:focus { border-color: var(--primary); }
+        .chat-input button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-        }
-
-        .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.5);
-            border-radius: 15px;
-            padding: 50px 20px;
-            margin-bottom: 25px;
+            border: none;
+            width: 44px; height: 44px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
+        .chat-input button:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4); }
 
-        .upload-area:hover {
-            border-color: #e94560;
-            background: rgba(255, 255, 255, 0.08);
+        .floating-chat-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px; height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.5);
+            z-index: 99;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .floating-chat-btn:hover { transform: scale(1.1); }
 
-        .upload-area p {
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 10px;
+        /* Typing indicator */
+        .typing span { display: inline-block; animation: blink 1.4s infinite; font-size: 1.5rem; line-height: 0.1; }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 20% { opacity: 1; } }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast {
+            background: var(--panel-bg); backdrop-filter: blur(20px); border: 1px solid var(--panel-border);
+            padding: 14px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            color: var(--text-dark); font-weight: 500; display: flex; align-items: center; gap: 12px;
+            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            pointer-events: auto;
         }
+        .toast.success i { color: #10b981; font-size: 1.2rem; }
+        .toast.error i { color: #ef4444; font-size: 1.2rem; }
+        .toast.hide { animation: fadeOut 0.3s ease forwards; }
+        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
 
-        footer {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 40px 5%;
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .charts-grid { grid-template-columns: 1fr 1fr; }
+            .chart-large { grid-column: span 2; }
         }
-
-        footer p {
-            color: rgba(255, 255, 255, 0.5);
+        @media (max-width: 900px) {
+            .topbar-nav { display: none; }
+            .search-bar { width: 200px; }
+            .search-bar:focus-within { width: 250px; }
         }
-
-        /* Responsive Design */
         @media (max-width: 768px) {
-
-            .nav-links,
-            .nav-buttons {
-                display: none;
+            .sidebar { position: fixed; left: -260px; }
+            .sidebar.mobile-open { left: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.1); }
+            .sidebar.mobile-open + .main-content::after {
+                content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
+                background: rgba(0,0,0,0.3); z-index: 15; backdrop-filter: blur(2px);
             }
-
-            .menu-toggle {
-                display: flex;
-            }
-
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-            }
-
-            .hero-buttons .btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .login-box,
-            .upload-box {
-                padding: 40px 25px;
-            }
-
-            .section-title {
-                font-size: 2rem;
-            }
-
-            .mobile-menu {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                width: 80%;
-                max-width: 300px;
-                height: 100vh;
-                background: rgba(26, 26, 46, 0.98);
-                backdrop-filter: blur(20px);
-                padding: 80px 30px;
-                transition: right 0.3s;
-                z-index: 999;
-            }
-
-            .mobile-menu.active {
-                right: 0;
-            }
-
-            .mobile-menu .nav-links {
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                margin-bottom: 30px;
-            }
-
-            .mobile-menu .nav-buttons {
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .mobile-menu .btn {
-                text-align: center;
-            }
-
-            .close-menu {
-                position: absolute;
-                top: 25px;
-                right: 25px;
-                font-size: 30px;
-                color: white;
-                cursor: pointer;
-                background: none;
-                border: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .feature-card {
-                padding: 30px 20px;
-            }
-
-            .form-options {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-large { grid-column: span 1; }
+            .hero-section { flex-direction: column; text-align: center; padding: 30px 20px; }
+            .hero-subtitle { margin: 0 auto 25px; }
+            .ai-orb-container { margin-top: 30px; }
+            .search-bar { display: none; }
         }
     </style>
 </head>
-
 <body>
-    <div
-        style="background-image: url('https://unsplash.com/photos/red-locomotive-electric-with-a-freight-train-at-high-speed-rides-by-rail-uzDaaHDeSEM'); width: 100%; height: 400px;">
-        Content goes here
-    </div>
 
-    <div class="bg-pattern">
-        <div class="railway-logo"></div>
-        <div class="railway-logo"></div>
-        <div class="railway-logo"></div>
-        <div class="railway-logo"></div>
-        <div class="railway-logo"></div>
-    </div>
+    <div class="ambient-background"></div>
+    <div id="toast-container"></div>
 
-    <!-- Navigation -->
-    <nav>
-        <a href="#" class="logo" onclick="showPage('home')">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M12 2C8 2 5 3 5 7v9c0 2.2 1.8 4 4 4l-1 2h8l-1-2c2.2 0 4-1.8 4-4V7c0-4-3-5-7-5zm-2 14c-.8 0-1.5-.7-1.5-1.5S9.2 13 10 13s1.5.7 1.5 1.5S10.8 16 10 16zm4 0c-.8 0-1.5-.7-1.5-1.5S13.2 13 14 13s1.5.7 1.5 1.5S14.8 16 14 16zm3-6H7V7c0-2 1.5-3 5-3s5 1 5 3v3z" />
-            </svg>
-            RailwayGo
-        </a>
-        <ul class="nav-links">
-            <li><a href="#" onclick="showPage('home')">HOME</a></li>
-            <li><a href="#">INDEX MENU</a></li>
-            <li><a href="#">INDEX 1</a></li>
-            <li><a href="#">INDEX 2</a></li>
-        </ul>
-        <div class="nav-buttons">
-            <a href="#" class="btn btn-outline" onclick="showPage('login')">Login</a>
-            <a href="#" class="btn btn-primary">Sign Up</a>
-        </div>
-        <div class="menu-toggle" onclick="toggleMobileMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </nav>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="close-menu" onclick="toggleMobileMenu()">×</button>
-        <ul class="nav-links">
-            <li><a href="#" onclick="showPage('home'); toggleMobileMenu();">HOME</a></li>
-            <li><a href="#" onclick="toggleMobileMenu();">INDEX MENU</a></li>
-            <li><a href="#" onclick="toggleMobileMenu();">INDEX 1</a></li>
-            <li><a href="#" onclick="toggleMobileMenu();">INDEX 2</a></li>
-        </ul>
-
-    </div>
-
-    <!-- Home Page -->
-    <div class="page active" id="homePage">
-        <section class="hero">
-            <div class="hero-content">
-                <h1>Travel Smarter with <span>RailwayGo</span></h1>
-                <p>Upload and manage your track data securely. Select between Excel spreadsheets and PPT presentations
-                    with our centralized portal.</p>
-                <div class="hero-buttons">
-                    <a href="#" class="btn btn-primary" onclick="showPage('upload')">Upload Data</a>
-
-                </div>
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-train-subway"></i>
+                <span class="brand-text">Railway AI</span>
             </div>
-        </section>
+            <ul class="nav-links">
+                <li class="active"><a href="#"><i class="fa-solid fa-chart-pie"></i> <span class="nav-text">Intelligence</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-network-wired"></i> <span class="nav-text">Live Tracking</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-file-excel"></i> <span class="nav-text">Data Matrices</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-robot"></i> <span class="nav-text">AI Diagnostics</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-gear"></i> <span class="nav-text">Settings</span></a></li>
+            </ul>
+        </aside>
 
-        <!-- Features Section -->
-        <section class="features">
-            <h2 class="section-title">Our Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path
-                                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                        </svg>
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Context Navbar -->
+            <nav class="topbar glass-panel">
+                <div class="topbar-left">
+                    <button id="menu-toggle" class="icon-btn ripple-btn" aria-label="Toggle Menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="search-bar">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" placeholder="Ask AI: 'Show current revenue...'">
                     </div>
-                    <h3>Live Tracking</h3>
-                    <p>Track your train in real-time with precise GPS location and estimated arrival times for any
-                        station.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path
-                                d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z" />
-                        </svg>
+                <div class="topbar-nav">
+                    <a href="#">Dashboard</a>
+                    <a href="#">Metrics</a>
+                    <a href="#">Reports</a>
+                </div>
+                <div class="topbar-right">
+                    <button id="theme-toggle" class="icon-btn ripple-btn">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button class="icon-btn ripple-btn" style="position: relative;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <div class="profile-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=4facfe&color=fff&bold=true" alt="Admin">
                     </div>
-                    <h3>Excel Sync</h3>
-                    <p>Easily upload your .xlsx spreadsheets directly into our system for seamless data syncing and
-                        processing.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path
-                                d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                        </svg>
-                    </div>
-                    <h3>PPT Integration</h3>
-                    <p>Manage .pptx presentation formats alongside your data to prepare dynamic reports quickly
-                        securely.</p>
-                </div>
-            </div>
-        </section>
+            </nav>
 
-        <footer>
-            <div style="display: flex; justify-content: center; gap: 25px; margin-bottom: 20px; flex-wrap: wrap;">
-                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;"
-                    onclick="showPage('home')">1 Home</a>
-                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;">2
-                    Index</a>
-                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;">3
-                    Index1</a>
-                <a href="#" style="color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.9rem;">4
-                    Index2</a>
+            <div class="dashboard-content">
+                
+                <!-- Hero Greeting -->
+                <section class="hero-section glass-panel fade-in-section delay-1 skeleton">
+                    <div class="hero-text">
+                        <h1 id="typing-heading"></h1>
+                        <p class="hero-subtitle">Real-time data synchronization is active. AI has detected zero anomalies across 420 train routes today.</p>
+                        <button class="btn btn-primary ripple-btn">Generate Insight Report <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                    <div class="ai-orb-container">
+                        <div class="ai-orb"></div>
+                    </div>
+                </section>
+
+                <!-- Statistics Grid -->
+                <section class="stats-grid fade-in-section delay-2">
+                    <div class="stat-card glass-panel hover-lift skeleton">
+                        <div class="stat-header">
+                            <span>Network Status</span>
+                            <div class="pulse-indicator"></div>
+                        </div>
+                        <div class="stat-value">Nominal</div>
+                        <p class="stat-desc text-success"><i class="fa-solid fa-arrow-up"></i> 100% Uptime</p>
+                    </div>
+                    
+                    <div class="stat-card glass-panel hover-lift skeleton">
+                        <div class="stat-header">
+                            <span>Passenger Analytics</span>
+                            <i class="fa-solid fa-users text-primary"></i>
+                        </div>
+                        <div class="stat-value" id="passenger-count">0</div>
+                        <p class="stat-desc text-success"><i class="fa-solid fa-arrow-up"></i> +4.5% vs yesterday</p>
+                    </div>
+
+                    <div class="stat-card glass-panel hover-lift skeleton">
+                        <div class="stat-header">
+                            <span>Total Revenue</span>
+                            <i class="fa-solid fa-wallet" style="color: var(--secondary)"></i>
+                        </div>
+                        <div class="stat-value">₹<span id="revenue-count">0</span></div>
+                        <p class="stat-desc text-success"><i class="fa-solid fa-arrow-up"></i> 8.2% Growth</p>
+                    </div>
+
+                    <div class="stat-card glass-panel hover-lift skeleton" style="border: 1px solid rgba(239, 68, 68, 0.4);">
+                        <div class="stat-header">
+                            <span>Delay Prediction</span>
+                            <span class="ai-badge">AI ALERT</span>
+                        </div>
+                        <div class="stat-value text-danger">High Risk</div>
+                        <p class="stat-desc text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Train 1042 expects 15m delay</p>
+                    </div>
+                </section>
+
+                <!-- Charts Section -->
+                <section class="charts-grid fade-in-section delay-3">
+                    <div class="chart-card glass-panel chart-large hover-lift skeleton">
+                        <h3>Real-Time Movement Trends</h3>
+                        <div class="canvas-container">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card glass-panel hover-lift skeleton">
+                        <h3>Passenger Flow (Zones)</h3>
+                        <div class="canvas-container">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card glass-panel hover-lift skeleton" style="grid-column: span 1;">
+                        <h3>Revenue Distribution</h3>
+                        <div class="canvas-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- File Upload / Sync Area -->
+                <section class="upload-section glass-panel hover-lift fade-in-section delay-4 skeleton">
+                    <div class="upload-header">
+                        <h3>Live Data Synchronization</h3>
+                        <p>Upload new Excel (.xlsx) or Presentation (.pptx) matrices to instantly retrain the AI models.</p>
+                    </div>
+                    <div class="dropzone" id="dropzone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p>Drag & drop your files here, or <span>browse files</span></p>
+                    </div>
+                </section>
+
             </div>
-            <p>&copy; 2026 RailwayGo. All rights reserved.</p>
-        </footer>
+        </main>
     </div>
 
-    <!-- Login Page -->
-    <div class="page" id="loginPage">
-        <div class="login-container">
-            <div class="login-box">
-                <div class="login-header">
-                    <svg viewBox="0 0 24 24" fill="#e94560">
-                        <path
-                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                    </svg>
-                    <h2>Welcome Back</h2>
-                    <p>Login to your account</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Enter your email">
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter your password">
-                </div>
-
-                <div class="form-options">
-                    <label class="remember-me">
-                        <input type="checkbox">
-                        Remember me
-                    </label>
-                    <a href="#" class="forgot-password">Forgot Password?</a>
-                </div>
-
-                <button class="btn btn-primary login-btn">Login</button>
+    <!-- Floating AI Chatbot Widget -->
+    <div class="chatbot-container glass-panel" id="chatbot-window">
+        <div class="chat-header">
+            <div>
+                <div class="ai-mini-orb"></div>
+                Intelligence Assistant
+            </div>
+            <button class="chat-close" id="close-chat"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chat-body" id="chat-messages">
+            <div class="chat-msg ai-msg">
+                Hello Administrator. I am actively monitoring the railway database and live matrices. How can I assist you?
             </div>
         </div>
-    </div>
-
-    <!-- Upload Page -->
-    <div class="page" id="uploadPage">
-        <div class="upload-container">
-            <div class="upload-box">
-                <h2>Upload Data</h2>
-                <div class="form-group" style="text-align: left;">
-                    <label for="dataType"
-                        style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.8);">Select Format:</label>
-                    <select id="dataType">
-                        <option value="excel">Excel Format (.xlsx, .xls)</option>
-                        <option value="ppt">PowerPoint Format (.pptx, .ppt)</option>
-                    </select>
-                </div>
-
-                <div class="upload-area">
-                    <svg viewBox="0 0 24 24" fill="#e94560" width="50" height="50" style="margin-bottom: 10px;">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                    </svg>
-                    <p>Drag & drop your file here or click to browse</p>
-                </div>
-
-                <button class="btn btn-primary upload-btn">Upload File</button>
-            </div>
+        <div class="chat-chips">
+            <button class="chip">Check Delays</button>
+            <button class="chip">Daily Revenue</button>
+            <button class="chip">Train Status</button>
+        </div>
+        <div class="chat-input container glass-panel">
+            <input type="text" id="chat-input" placeholder="Type a command or ask a question...">
+            <button id="send-chat" class="ripple-btn"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
+    
+    <button class="floating-chat-btn ripple-btn" id="open-chat">
+        <i class="fa-solid fa-sparkles"></i>
+    </button>
 
-    <!-- Scripts for Interaction -->
     <script>
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            const page = document.getElementById(pageId + 'Page');
-            if (page) {
-                page.classList.add('active');
-            } else {
-                alert(pageId.toUpperCase() + ' page is currently under construction!');
-                document.getElementById('homePage').classList.add('active');
-            }
+        // Utilities
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end.toLocaleString();
+                }
+            };
+            window.requestAnimationFrame(step);
         }
 
-        function toggleMobileMenu() {
-            document.getElementById('mobileMenu').classList.toggle('active');
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+            circle.classList.add("ripple");
+            const existingRipple = button.querySelector(".ripple");
+            if (existingRipple) existingRipple.remove();
+            button.appendChild(circle);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${message}`;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
+        // Attach ripples
+        document.querySelectorAll('.ripple-btn').forEach(btn => {
+            btn.addEventListener('mousedown', createRipple);
+        });
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+            showToast(`Switched to ${isDark ? 'Dark' : 'Light'} Mode`, 'success');
+            
+            // Re-render charts for theme
+            if(window.sysChartsBase) {
+                Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+                const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+                [window.lineChart, window.barChart].forEach(c => {
+                    if(c && c.options.scales) {
+                        c.options.scales.x.grid.color = borderColor;
+                        c.options.scales.y.grid.color = borderColor;
+                        c.update();
+                    }
+                });
+                if(window.pieChart) window.pieChart.update();
+            }
+        });
+
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        menuToggle.addEventListener('click', () => {
+            if(window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        });
+
+        // Dropzone Interaction
+        const dropzone = document.getElementById('dropzone');
+        dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', e => { dropzone.classList.remove('dragover'); });
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if(files.length > 0) {
+                showToast(`Synchronizing ${files[0].name} to database...`, 'success');
+            }
+        });
+        dropzone.addEventListener('click', () => {
+            showToast('Opening secure file browser...', 'success');
+        });
+
+        // Chatbot Interaction
+        const chatWin = document.getElementById('chatbot-window');
+        const openChat = document.getElementById('open-chat');
+        const closeChat = document.getElementById('close-chat');
+        const chatBody = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChat = document.getElementById('send-chat');
+
+        openChat.addEventListener('click', () => {
+            chatWin.classList.add('open');
+            openChat.style.transform = 'scale(0)';
+        });
+        closeChat.addEventListener('click', () => {
+            chatWin.classList.remove('open');
+            openChat.style.transform = '';
+        });
+
+        function appendMsg(text, isAi = true) {
+            const div = document.createElement('div');
+            div.className = `chat-msg ${isAi ? 'ai-msg' : 'user-msg'}`;
+            div.innerHTML = text;
+            chatBody.appendChild(div);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function simulatedAIResponse(query) {
+            const loader = document.createElement('div');
+            loader.className = 'chat-msg ai-msg typing';
+            loader.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+            chatBody.appendChild(loader);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            setTimeout(() => {
+                loader.remove();
+                const text = query.toLowerCase();
+                let res = "Intelligence model is analyzing matrices. Everything operates nominally.";
+                if(text.includes('delay')) {
+                    res = "<strong style='color:#ef4444'>AI ALERT:</strong> Predicting a 15 min delay for Train 1042 due to weather impedance ahead. Recommending track switch.";
+                } else if(text.includes('revenue')) {
+                    res = "Today's revenue is currently estimated at ₹2,459,200. This tracks 8.2% above standard operational quotas.";
+                } else if(text.includes('status')) {
+                    res = "All 420 active units are reporting real-time data. Data sheets synced 2 mins ago.";
+                }
+                appendMsg(res, true);
+            }, 1200);
+        }
+
+        function handleSend() {
+            const text = chatInput.value.trim();
+            if(!text) return;
+            appendMsg(text, false);
+            chatInput.value = '';
+            simulatedAIResponse(text);
+        }
+        sendChat.addEventListener('click', handleSend);
+        chatInput.addEventListener('keypress', e => { if(e.key === 'Enter') handleSend(); });
+        
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                appendMsg(chip.innerText, false);
+                simulatedAIResponse(chip.innerText);
+            });
+        });
+
+        // Initialize Application Sequence
+        window.addEventListener('DOMContentLoaded', () => {
+            // Typing intro
+            const text = "Railway Intelligence Framework Initialized.";
+            let index = 0;
+            const heading = document.getElementById('typing-heading');
+            function type() {
+                if(index < text.length) {
+                    heading.innerHTML += text.charAt(index);
+                    index++;
+                    setTimeout(type, 50);
+                }
+            }
+            setTimeout(type, 1500); // Start after skeletons fade
+
+            // Remove Skeletons & Mount Data after 1.5s
+            setTimeout(() => {
+                document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
+                
+                // Numbers
+                animateValue(document.getElementById('passenger-count'), 0, 24590, 2000);
+                animateValue(document.getElementById('revenue-count'), 0, 2459200, 2000);
+
+                // Render Charts
+                renderCharts();
+                showToast("System matrices successfully loaded.", "success");
+            }, 1500);
+        });
+
+        function renderCharts() {
+            window.sysChartsBase = true;
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = "#64748b";
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+            const chartOpts = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 2000, easing: 'easeOutQuart' },
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+                scales: {
+                    x: { grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false } },
+                    y: { grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false } }
+                }
+            };
+
+            // Line Chart
+            const ctxL = document.getElementById('lineChart').getContext('2d');
+            const gradL = ctxL.createLinearGradient(0, 0, 0, 300);
+            gradL.addColorStop(0, 'rgba(79, 172, 254, 0.4)');
+            gradL.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+            
+            window.lineChart = new Chart(ctxL, {
+                type: 'line',
+                data: {
+                    labels: ['8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm'],
+                    datasets: [{
+                        label: 'Active Movement Density',
+                        data: [120, 160, 210, 180, 240, 290, 150],
+                        borderColor: '#00f2fe',
+                        backgroundColor: gradL,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#4facfe',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: chartOpts
+            });
+
+            // Bar Chart
+            const ctxB = document.getElementById('barChart').getContext('2d');
+            window.barChart = new Chart(ctxB, {
+                type: 'bar',
+                data: {
+                    labels: ['North', 'South', 'East', 'West'],
+                    datasets: [{
+                        label: 'Flow (k)',
+                        data: [42, 65, 38, 55],
+                        backgroundColor: 'rgba(79, 172, 254, 0.8)',
+                        borderRadius: 6,
+                        hoverBackgroundColor: '#00f2fe'
+                    }]
+                },
+                options: chartOpts
+            });
+
+            // Pie Chart
+            const ctxP = document.getElementById('pieChart').getContext('2d');
+            window.pieChart = new Chart(ctxP, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Passenger', 'Freight', 'Express'],
+                    datasets: [{
+                        data: [55, 30, 15],
+                        backgroundColor: ['#4facfe', '#00f2fe', '#0ea5e9'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    animation: { duration: 2000, easing: 'easeOutQuart' },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } }
+                }
+            });
         }
     </script>
 </body>
-
 </html>
