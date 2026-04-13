@@ -1,0 +1,13 @@
+{
+  "name": "railway-intelligence-system",
+  "version": "1.0.0",
+  "description": "Railway Intelligence System - AI-powered dashboard for railway analytics and data management",
+  "private": true,
+  "scripts": {
+    "start": "node railway-dashboard/server.js",
+    "dev": "node railway-dashboard/server.js"
+  },
+  "dependencies": {
+    "multer": "^2.1.1"
+  }
+}

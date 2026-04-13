@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Uploads directory
+uploads/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Vercel
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Skills/Agents
+.agents/
+.claude/
+.zencoder/
+.zenflow/
+skills-lock.json
+
+.vercel
