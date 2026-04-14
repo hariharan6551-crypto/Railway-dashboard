@@ -1807,6 +1807,11 @@ dropzone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => { if (fileInput.files.length) { handleFiles(fileInput.files); fileInput.value = ''; } });
 
 async function handleFiles(fileList) {
+    // Role check: analysts have read-only access
+    if (APP.user && APP.user.role === 'analyst') {
+        toast('Access denied — analysts have read-only access', 'error');
+        return;
+    }
     const validExts = ['.xlsx', '.xls', '.docx', '.pptx', '.ppt'];
 
     for (const file of fileList) {
@@ -1850,11 +1855,13 @@ async function handleFiles(fileList) {
         } else {
             const fileObj = {
                 id: uid(), name: file.name, type, size: file.size,
-                uploadedAt: Date.now(), version: 1, data: parsed
+                uploadedAt: Date.now(), version: 1, data: parsed,
+                uploadedBy: APP.user ? (APP.user.displayName || APP.user.username) : 'Unknown'
             };
             APP.files.unshift(fileObj);
             toast(`✓ "${file.name}" processed successfully!`, 'success');
             addNotification(`File Uploaded: ${file.name}`, `${type.toUpperCase()} file processed and synchronized`);
+            logActivity('upload', `Uploaded file: ${file.name} (${type.toUpperCase()}, ${fmtSize(file.size)})`, file.name);
             broadcastChange('file_uploaded', file.name);
         }
 
@@ -1876,6 +1883,11 @@ function deleteFile(fileId, event) {
     const idx = APP.files.findIndex(f => f.id === fileId);
     if (idx === -1) return;
     const name = APP.files[idx].name;
+    // Role check: analysts cannot delete
+    if (APP.user && APP.user.role === 'analyst') {
+        toast('Access denied — analysts have read-only access', 'error');
+        return;
+    }
     APP.files.splice(idx, 1);
     saveMeta();
     updateUploadBadge();
@@ -1883,6 +1895,7 @@ function deleteFile(fileId, event) {
     if (APP.page === 'dashboard') renderDashboard();
     toast(`"${name}" removed`, 'info');
     addNotification(`File Deleted: ${name}`, 'File removed from intelligence database');
+    logActivity('delete', `Deleted file: ${name}`, name);
     broadcastChange('file_deleted', name);
 }
 
@@ -1962,9 +1975,12 @@ async function connectGoogleSheets() {
                 size: JSON.stringify(data).length,
                 uploadedAt: Date.now(), version: 1, data: data,
                 isLive: true,
-                sheetId: spreadsheetId
+                sheetId: spreadsheetId,
+                uploadedBy: APP.user ? (APP.user.displayName || APP.user.username) : 'Unknown'
             });
         }
+
+        logActivity('sheets_connect', `Connected Google Sheets (${data.sheetNames.length} sheets)`, 'Google Sheets');
 
         $('sheetsStatusBadge').style.display = 'inline-flex';
         $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-check"></i> Connected';
