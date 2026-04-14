@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Railway AI — Cinematic Train Experience</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif}
+body{background:#0a1628}
+
+/* ═══════════════════ SCENE CONTAINER ═══════════════════ */
+.scene{position:fixed;inset:0;overflow:hidden}
+
+/* ═══════════════════ SKY ═══════════════════ */
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#87CEEB 0%,#B0E0E6 30%,#E0F7FA 60%,#fff 100%);animation:skyShift 12s ease-in-out forwards}
+@keyframes skyShift{
+    0%{background:linear-gradient(180deg,#1a237e 0%,#283593 30%,#3949ab 60%,#5c6bc0 100%)}
+    15%{background:linear-gradient(180deg,#1565c0 0%,#42a5f5 30%,#90caf9 60%,#e3f2fd 100%)}
+    40%{background:linear-gradient(180deg,#87CEEB 0%,#B0E0E6 30%,#E0F7FA 60%,#fff 100%)}
+    100%{background:linear-gradient(180deg,#64b5f6 0%,#90caf9 25%,#e1f5fe 55%,#fff 100%)}
+}
+
+/* ═══════════════════ SUN ═══════════════════ */
+.sun{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#fff 20%,#ffd54f 40%,rgba(255,183,77,.5) 60%,transparent 70%);top:8%;right:15%;box-shadow:0 0 80px rgba(255,193,7,.4),0 0 200px rgba(255,193,7,.15);animation:sunRise 12s ease-out forwards;opacity:0}
+@keyframes sunRise{0%{opacity:0;transform:translateY(100px) scale(.5)}30%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:1;transform:translateY(-20px) scale(1.1)}}
+
+/* ═══════════════════ CLOUDS ═══════════════════ */
+.clouds{position:absolute;top:0;left:0;width:100%;height:50%;pointer-events:none}
+.cloud{position:absolute;background:rgba(255,255,255,.85);border-radius:50px;filter:blur(2px)}
+.cloud::before,.cloud::after{content:'';position:absolute;background:inherit;border-radius:50%}
+.c1{width:200px;height:50px;top:12%;left:-200px;animation:cloudDrift 12s 1s linear forwards}
+.c1::before{width:80px;height:60px;top:-25px;left:30px}
+.c1::after{width:100px;height:50px;top:-20px;left:80px}
+.c2{width:160px;height:40px;top:18%;left:-160px;animation:cloudDrift 12s 2.5s linear forwards;opacity:.7}
+.c2::before{width:60px;height:45px;top:-20px;left:20px}
+.c2::after{width:80px;height:40px;top:-15px;left:60px}
+.c3{width:180px;height:45px;top:8%;left:-180px;animation:cloudDrift 12s 0.5s linear forwards;opacity:.6}
+.c3::before{width:70px;height:50px;top:-22px;left:40px}
+.c3::after{width:90px;height:45px;top:-18px;left:80px}
+@keyframes cloudDrift{0%{transform:translateX(0)}100%{transform:translateX(calc(100vw + 400px))}}
+
+/* ═══════════════════ MOUNTAINS ═══════════════════ */
+.mountains{position:absolute;bottom:28%;width:100%;height:200px}
+.mount{position:absolute;bottom:0;width:0;height:0;border-style:solid}
+.m1{border-width:0 200px 160px 200px;border-color:transparent transparent #78909c transparent;left:5%;opacity:.4}
+.m2{border-width:0 250px 200px 250px;border-color:transparent transparent #607d8b transparent;left:20%;opacity:.5}
+.m3{border-width:0 180px 140px 180px;border-color:transparent transparent #90a4ae transparent;left:55%;opacity:.35}
+.m4{border-width:0 220px 180px 220px;border-color:transparent transparent #546e7a transparent;left:70%;opacity:.45}
+
+/* ═══════════════════ GROUND / LANDSCAPE ═══════════════════ */
+.ground{position:absolute;bottom:0;width:100%;height:30%;background:linear-gradient(180deg,#66bb6a 0%,#43a047 30%,#2e7d32 60%,#1b5e20 100%)}
+.ground::before{content:'';position:absolute;top:0;width:100%;height:8px;background:linear-gradient(90deg,#4caf50,#81c784,#4caf50);filter:blur(2px)}
+
+/* ═══════════════════ TRACK BED ═══════════════════ */
+.trackbed{position:absolute;bottom:26%;width:100%;height:50px;background:linear-gradient(180deg,#795548 0%,#5d4037 50%,#4e342e 100%);z-index:5}
+.trackbed::before{content:'';position:absolute;top:-3px;width:100%;height:6px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.15) 0px,rgba(0,0,0,.15) 8px,transparent 8px,transparent 16px)}
+
+/* ═══════════════════ RAILS ═══════════════════ */
+.rails{position:absolute;bottom:28.5%;width:100%;height:6px;z-index:6}
+.rail{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,#b0bec5,#cfd8dc,#b0bec5);box-shadow:0 0 4px rgba(176,190,197,.5)}
+.rail-top{top:0}
+.rail-bot{bottom:0}
+
+/* ═══════════════════ SLEEPERS ═══════════════════ */
+.sleepers{position:absolute;bottom:27%;width:200%;height:14px;z-index:5;display:flex;gap:18px;animation:sleepersScroll 12s linear forwards}
+.sleeper{width:8px;height:14px;background:#5d4037;border-radius:1px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+@keyframes sleepersScroll{
+    0%{transform:translateX(0)}
+    15%{transform:translateX(-100px)}
+    40%{transform:translateX(-600px)}
+    60%{transform:translateX(-2000px)}
+    100%{transform:translateX(-4000px)}
+}
+
+/* ═══════════════════ STATION PLATFORM ═══════════════════ */
+.platform{position:absolute;bottom:28%;right:10%;width:400px;height:80px;background:linear-gradient(180deg,#e0e0e0,#bdbdbd);border-radius:4px 4px 0 0;z-index:4;animation:platformSlide 12s ease-in forwards;box-shadow:0 -2px 10px rgba(0,0,0,.1)}
+.platform::before{content:'🚉 Madurai Jn';position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:14px;font-weight:700;color:#1a237e;background:rgba(255,255,255,.9);padding:4px 16px;border-radius:4px;white-space:nowrap;border:2px solid #1565c0}
+.platform-roof{position:absolute;bottom:110px;right:8%;width:440px;height:20px;background:linear-gradient(180deg,#37474f,#455a64);z-index:4;animation:platformSlide 12s ease-in forwards;border-radius:2px}
+.platform-pillars{position:absolute;bottom:28%;right:10%;width:400px;height:80px;z-index:3;display:flex;justify-content:space-around;animation:platformSlide 12s ease-in forwards}
+.pillar{width:6px;height:80px;background:#78909c;border-radius:2px}
+@keyframes platformSlide{0%{transform:translateX(0);opacity:1}30%{transform:translateX(0);opacity:1}60%{transform:translateX(-150vw);opacity:0}100%{transform:translateX(-200vw);opacity:0}}
+
+/* ═══════════════════ POWER LINES ═══════════════════ */
+.powerlines{position:absolute;bottom:30%;width:200%;z-index:3;animation:powerScroll 12s linear forwards}
+.pole{position:absolute;bottom:0;width:4px;height:100px;background:linear-gradient(180deg,#546e7a,#37474f)}
+.pole::before{content:'';position:absolute;top:0;left:-15px;width:34px;height:3px;background:#37474f}
+.pole::after{content:'';position:absolute;top:5px;left:-10px;width:24px;height:2px;background:#455a64}
+.pole:nth-child(1){left:10%}
+.pole:nth-child(2){left:35%}
+.pole:nth-child(3){left:60%}
+.pole:nth-child(4){left:85%}
+.pole:nth-child(5){left:110%}
+.pole:nth-child(6){left:135%}
+.wire{position:absolute;top:0;width:100%;height:1px;background:rgba(96,125,139,.3)}
+@keyframes powerScroll{0%{transform:translateX(0)}15%{transform:translateX(-50px)}40%{transform:translateX(-300px)}60%{transform:translateX(-1000px)}100%{transform:translateX(-2000px)}}
+
+/* ═══════════════════ TRAIN ═══════════════════ */
+.train-wrap{position:absolute;bottom:29%;z-index:10;animation:trainMove 12s ease-in-out forwards}
+@keyframes trainMove{
+    0%{left:50%;transform:translateX(-50%)}
+    15%{left:50%;transform:translateX(-50%)}
+    25%{left:48%;transform:translateX(-50%)}
+    40%{left:35%;transform:translateX(-50%)}
+    60%{left:-5%;transform:translateX(-50%)}
+    80%{left:-200px;transform:translateX(-100%)}
+    85%{left:110%;transform:translateX(0)}
+    100%{left:45%;transform:translateX(-50%)}
+}
+
+.loco{display:flex;align-items:flex-end;filter:drop-shadow(0 8px 20px rgba(0,0,0,.25))}
+
+/* Engine */
+.engine{width:180px;height:65px;background:linear-gradient(180deg,#1565c0 0%,#1976d2 25%,#1e88e5 50%,#0d47a1 100%);border-radius:8px 20px 3px 3px;position:relative;border:1px solid rgba(255,255,255,.15)}
+.engine::before{content:'';position:absolute;top:8px;left:12px;width:40%;height:20px;background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.08));border-radius:3px}
+.engine::after{content:'';position:absolute;bottom:3px;left:15px;right:15px;height:4px;background:repeating-linear-gradient(90deg,#ffeb3b 0px,#ffeb3b 3px,transparent 3px,transparent 8px);border-radius:1px}
+
+/* Nose */
+.nose{width:30px;height:55px;background:linear-gradient(180deg,#1565c0,#0d47a1);border-radius:10px 0 0 3px;position:relative;margin-right:-2px}
+.nose::before{content:'';position:absolute;top:15px;left:3px;width:12px;height:12px;background:radial-gradient(circle,#fff 30%,#fdd835 50%,transparent 70%);border-radius:50%;box-shadow:0 0 10px #fdd835,0 0 25px rgba(255,235,59,.4);animation:headlightFlash 1.5s ease-in-out infinite alternate}
+@keyframes headlightFlash{0%{box-shadow:0 0 10px #fdd835,0 0 25px rgba(255,235,59,.4)}100%{box-shadow:0 0 15px #fff,0 0 35px rgba(255,235,59,.6),0 0 60px rgba(255,235,59,.2)}}
+
+/* Light beam */
+.lightbeam{position:absolute;top:16px;left:-80px;width:80px;height:30px;background:linear-gradient(90deg,transparent,rgba(255,235,59,.08));clip-path:polygon(100% 30%,0 0,0 100%);animation:beamPulse 2s ease-in-out infinite alternate;opacity:0}
+@keyframes beamPulse{0%{opacity:.3}100%{opacity:.6}}
+
+/* Windows */
+.e-windows{position:absolute;top:10px;left:50px;display:flex;gap:6px}
+.e-win{width:14px;height:18px;background:linear-gradient(180deg,rgba(144,202,249,.8),rgba(100,181,246,.5));border-radius:2px;border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 0 4px rgba(255,255,255,.2)}
+
+/* Indian Railway Logo Area */
+.ir-logo{position:absolute;top:35px;left:50%;transform:translateX(-50%);font-size:7px;color:rgba(255,255,255,.7);font-weight:800;letter-spacing:1px;white-space:nowrap}
+
+/* Coaches */
+.coach{width:140px;height:55px;border-radius:3px;position:relative;margin-left:-1px;border:1px solid rgba(255,255,255,.1)}
+.coach-1{background:linear-gradient(180deg,#1565c0 0%,#1976d2 40%,#1e88e5 70%,#0d47a1 100%)}
+.coach-2{background:linear-gradient(180deg,#0277bd 0%,#0288d1 40%,#039be5 70%,#01579b 100%)}
+.coach-3{background:linear-gradient(180deg,#00838f 0%,#0097a7 40%,#00acc1 70%,#006064 100%)}
+
+.coach::before{content:'';position:absolute;bottom:4px;left:8px;right:8px;height:3px;background:repeating-linear-gradient(90deg,#ffeb3b 0px,#ffeb3b 2px,transparent 2px,transparent 6px);border-radius:1px}
+.c-windows{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:4px;justify-content:center}
+.c-win{width:11px;height:15px;background:linear-gradient(180deg,rgba(179,229,252,.7),rgba(129,212,250,.4));border-radius:1.5px;border:1px solid rgba(255,255,255,.15);box-shadow:inset 0 0 3px rgba(255,255,255,.15)}
+
+/* Wheels */
+.wheels{position:absolute;bottom:-8px;left:10%;right:10%;display:flex;justify-content:space-between}
+.wheel{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#37474f 30%,#263238 60%,#455a64 100%);border:2px solid #546e7a;box-shadow:0 2px 4px rgba(0,0,0,.3);animation:wheelSpin 12s linear forwards}
+@keyframes wheelSpin{
+    0%{transform:rotate(0deg)}
+    15%{transform:rotate(180deg)}
+    40%{transform:rotate(1800deg)}
+    60%{transform:rotate(7200deg)}
+    100%{transform:rotate(14400deg)}
+}
+
+/* Pantograph */
+.panto{position:absolute;top:-25px;left:60%;width:4px;height:25px;background:#546e7a}
+.panto::before{content:'';position:absolute;top:-2px;left:-8px;width:20px;height:3px;background:#37474f;border-radius:1px}
+.panto::after{content:'';position:absolute;top:-5px;left:-3px;width:10px;height:3px;background:#455a64;transform:rotate(-15deg)}
+
+/* ═══════════════════ SPEED LINES ═══════════════════ */
+.speed-lines{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;animation:speedFade 12s ease-in-out forwards}
+@keyframes speedFade{0%{opacity:0}30%{opacity:0}45%{opacity:.6}60%{opacity:.8}75%{opacity:0}100%{opacity:0}}
+.sp-line{position:absolute;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:speedLine 12s linear forwards}
+.sp-line:nth-child(1){top:20%;width:200px;left:100%;animation-delay:3s}
+.sp-line:nth-child(2){top:35%;width:300px;left:100%;animation-delay:3.5s}
+.sp-line:nth-child(3){top:50%;width:250px;left:100%;animation-delay:4s}
+.sp-line:nth-child(4){top:65%;width:180px;left:100%;animation-delay:4.5s}
+.sp-line:nth-child(5){top:80%;width:220px;left:100%;animation-delay:3.2s}
+.sp-line:nth-child(6){top:25%;width:160px;left:100%;animation-delay:5s}
+.sp-line:nth-child(7){top:45%;width:280px;left:100%;animation-delay:4.2s}
+.sp-line:nth-child(8){top:70%;width:200px;left:100%;animation-delay:5.5s}
+@keyframes speedLine{0%{transform:translateX(0)}100%{transform:translateX(calc(-100vw - 400px))}}
+
+/* ═══════════════════ TUNNEL / FLASH ═══════════════════ */
+.tunnel{position:fixed;inset:0;z-index:25;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.9) 100%);opacity:0;animation:tunnelFlash 12s ease-in-out forwards}
+@keyframes tunnelFlash{0%{opacity:0}55%{opacity:0}62%{opacity:.9}68%{opacity:1}72%{opacity:.8}78%{opacity:0}100%{opacity:0}}
+
+/* White flash transition */
+.flash{position:fixed;inset:0;z-index:30;pointer-events:none;background:#fff;opacity:0;animation:whiteFlash 12s ease-in-out forwards}
+@keyframes whiteFlash{0%{opacity:0}70%{opacity:0}74%{opacity:1}80%{opacity:.5}85%{opacity:0}100%{opacity:0}}
+
+/* ═══════════════════ OVERLAY TEXT ═══════════════════ */
+.overlay-text{position:fixed;inset:0;z-index:35;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.phase-text{font-weight:800;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.5);opacity:0;position:absolute;text-align:center}
+.pt-login{font-size:2.2rem;animation:textPhase1 12s ease forwards}
+.pt-auth{font-size:1.5rem;animation:textPhase2 12s ease forwards;color:#4fc3f7}
+.pt-dash{font-size:2.5rem;animation:textPhase3 12s ease forwards}
+.pt-sub{font-size:1rem;animation:textPhase4 12s ease forwards;color:#b3e5fc;letter-spacing:3px}
+
+@keyframes textPhase1{0%{opacity:0;transform:translateY(20px)}5%{opacity:1;transform:translateY(0)}18%{opacity:1}25%{opacity:0;transform:translateY(-30px)}100%{opacity:0}}
+@keyframes textPhase2{0%{opacity:0}25%{opacity:0}30%{opacity:1;transform:scale(1)}40%{opacity:1}48%{opacity:0;transform:scale(1.1)}100%{opacity:0}}
+@keyframes textPhase3{0%{opacity:0}78%{opacity:0;transform:translateY(30px) scale(.9)}85%{opacity:1;transform:translateY(0) scale(1)}95%{opacity:1}100%{opacity:.8}}
+@keyframes textPhase4{0%{opacity:0}85%{opacity:0}90%{opacity:1}100%{opacity:.7}}
+
+/* ═══════════════════ CORNER BADGES ═══════════════════ */
+.badge-tl{position:fixed;top:20px;left:20px;z-index:40;display:flex;align-items:center;gap:10px;opacity:0;animation:badgeIn 12s ease forwards}
+.badge-tl .logo{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#1565c0,#0097a7);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;box-shadow:0 4px 15px rgba(21,101,192,.4)}
+.badge-tl .label{color:#fff;font-weight:700;font-size:1.1rem;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.badge-tl .label small{display:block;font-size:.65rem;font-weight:500;opacity:.7;letter-spacing:1px}
+@keyframes badgeIn{0%{opacity:0}8%{opacity:1}100%{opacity:1}}
+
+.badge-br{position:fixed;bottom:20px;right:20px;z-index:40;color:rgba(255,255,255,.5);font-size:.75rem;font-weight:500;opacity:0;animation:badgeBR 12s ease forwards}
+@keyframes badgeBR{0%{opacity:0}10%{opacity:.5}100%{opacity:.4}}
+
+/* ═══════════════════ SMOKE / PARTICLES ═══════════════════ */
+.particles-layer{position:fixed;inset:0;z-index:15;pointer-events:none}
+.ptcl{position:absolute;border-radius:50%;background:rgba(255,255,255,.6);animation:ptclFloat 12s linear forwards}
+.ptcl:nth-child(1){width:4px;height:4px;bottom:35%;left:45%;animation-delay:4s}
+.ptcl:nth-child(2){width:3px;height:3px;bottom:32%;left:48%;animation-delay:4.3s}
+.ptcl:nth-child(3){width:5px;height:5px;bottom:38%;left:42%;animation-delay:4.8s}
+.ptcl:nth-child(4){width:3px;height:3px;bottom:35%;left:50%;animation-delay:5.2s}
+.ptcl:nth-child(5){width:4px;height:4px;bottom:40%;left:44%;animation-delay:5.5s}
+.ptcl:nth-child(6){width:2px;height:2px;bottom:33%;left:47%;animation-delay:4.6s}
+@keyframes ptclFloat{0%{opacity:0;transform:translate(0,0)}10%{opacity:.8}50%{opacity:.4;transform:translate(-100px,-60px)}100%{opacity:0;transform:translate(-250px,-120px)}}
+
+/* ═══════════════════ VIGNETTE ═══════════════════ */
+.vignette{position:fixed;inset:0;z-index:32;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.25) 100%)}
+
+/* ═══════════════════ GRAIN ═══════════════════ */
+.grain{position:fixed;inset:0;z-index:33;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+</style>
+</head>
+<body>
+<div class="scene">
+    <!-- Sky -->
+    <div class="sky"></div>
+    <div class="sun"></div>
+
+    <!-- Clouds -->
+    <div class="clouds">
+        <div class="cloud c1"></div>
+        <div class="cloud c2"></div>
+        <div class="cloud c3"></div>
+    </div>
+
+    <!-- Mountains -->
+    <div class="mountains">
+        <div class="mount m1"></div>
+        <div class="mount m2"></div>
+        <div class="mount m3"></div>
+        <div class="mount m4"></div>
+    </div>
+
+    <!-- Ground -->
+    <div class="ground"></div>
+
+    <!-- Station Platform -->
+    <div class="platform"></div>
+    <div class="platform-roof"></div>
+    <div class="platform-pillars">
+        <div class="pillar"></div><div class="pillar"></div><div class="pillar"></div><div class="pillar"></div><div class="pillar"></div>
+    </div>
+
+    <!-- Power Lines -->
+    <div class="powerlines">
+        <div class="pole"></div><div class="pole"></div><div class="pole"></div><div class="pole"></div><div class="pole"></div><div class="pole"></div>
+        <div class="wire" style="top:0"></div>
+        <div class="wire" style="top:5px"></div>
+    </div>
+
+    <!-- Track -->
+    <div class="trackbed"></div>
+    <div class="rails"><div class="rail rail-top"></div><div class="rail rail-bot"></div></div>
+    <div class="sleepers">
+        <script>document.write(Array(120).fill('<div class="sleeper"></div>').join(''))</script>
+    </div>
+
+    <!-- TRAIN -->
+    <div class="train-wrap">
+        <div class="loco">
+            <div class="nose">
+                <div class="lightbeam"></div>
+            </div>
+            <div class="engine">
+                <div class="panto"></div>
+                <div class="e-windows">
+                    <div class="e-win"></div><div class="e-win"></div><div class="e-win"></div>
+                </div>
+                <div class="ir-logo">INDIAN RAILWAYS</div>
+                <div class="wheels"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+            </div>
+            <div class="coach coach-1">
+                <div class="c-windows">
+                    <div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div>
+                </div>
+                <div class="wheels"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+            </div>
+            <div class="coach coach-2">
+                <div class="c-windows">
+                    <div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div>
+                </div>
+                <div class="wheels"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+            </div>
+            <div class="coach coach-3">
+                <div class="c-windows">
+                    <div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div><div class="c-win"></div>
+                </div>
+                <div class="wheels"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles-layer">
+        <div class="ptcl"></div><div class="ptcl"></div><div class="ptcl"></div>
+        <div class="ptcl"></div><div class="ptcl"></div><div class="ptcl"></div>
+    </div>
+</div>
+
+<!-- Effects -->
+<div class="speed-lines">
+    <div class="sp-line"></div><div class="sp-line"></div><div class="sp-line"></div><div class="sp-line"></div>
+    <div class="sp-line"></div><div class="sp-line"></div><div class="sp-line"></div><div class="sp-line"></div>
+</div>
+<div class="tunnel"></div>
+<div class="flash"></div>
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<!-- Text Overlays -->
+<div class="overlay-text">
+    <div class="phase-text pt-login">🔐 Secure Login Portal</div>
+    <div class="phase-text pt-auth">✅ Authentication Successful — Accelerating...</div>
+    <div class="phase-text pt-dash">🚀 Railway Intelligence Dashboard</div>
+    <div class="phase-text pt-sub">REAL-TIME AI-POWERED ANALYTICS PLATFORM</div>
+</div>
+
+<!-- Corner Badges -->
+<div class="badge-tl">
+    <div class="logo">🚄</div>
+    <div class="label">Railway AI<small>INTELLIGENCE SYSTEM</small></div>
+</div>
+<div class="badge-br">🔒 256-bit Encrypted · Southern Railway © 2026</div>
+</body>
+</html>
