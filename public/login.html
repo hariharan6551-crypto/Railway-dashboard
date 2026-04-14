@@ -265,6 +265,75 @@ a{text-decoration:none;color:inherit}
 .corner-brand{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;font-size:0.75rem;color:rgba(255,255,255,0.6);font-weight:500;letter-spacing:0.3px;text-align:center;animation:fadeBrandIn 1s 1.5s ease both}
 @keyframes fadeBrandIn{from{opacity:0}to{opacity:1}}
 .corner-brand i{margin-right:4px}
+
+/* ═══════════════════ 🚄 CINEMATIC TRAIN ANIMATION SYSTEM ═══════════════════ */
+.train-layer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;perspective:1200px;transition:opacity .8s ease}
+.train-layer.dimmed{opacity:.2}
+
+/* 🛤️ Glowing Track Lines */
+.trk{position:absolute;height:1px;width:250%;left:-75%}
+.trk-1{bottom:16%;background:linear-gradient(90deg,transparent 5%,rgba(79,172,254,.12) 25%,rgba(6,182,212,.1) 50%,rgba(79,172,254,.08) 75%,transparent 95%);animation:trkPulse 4s ease-in-out infinite}
+.trk-2{top:13%;background:linear-gradient(90deg,transparent 5%,rgba(139,92,246,.08) 30%,rgba(79,172,254,.06) 60%,transparent 95%);animation:trkPulse 5s ease-in-out infinite 1s}
+.trk-3{bottom:44%;background:linear-gradient(90deg,transparent,rgba(6,182,212,.04),transparent);animation:trkPulse 6s ease-in-out infinite 2s}
+@keyframes trkPulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* 🚄 Train Base */
+.trn{position:absolute;will-change:transform;display:flex;align-items:center}
+
+/* ✨ Primary Train — Bottom Edge (Left→Right) */
+.trn-1{bottom:15%;animation:trnSlide1 18s cubic-bezier(.4,0,.6,1) infinite}
+.trn-1 .t-body{width:160px;height:30px;background:linear-gradient(135deg,rgba(59,130,246,.5) 0%,rgba(6,182,212,.65) 35%,rgba(79,172,254,.55) 65%,rgba(99,102,241,.4) 100%);border-radius:15px 5px 5px 15px;position:relative;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);box-shadow:0 0 30px rgba(79,172,254,.3),0 0 60px rgba(6,182,212,.12),inset 0 1px 0 rgba(255,255,255,.25)}
+
+/* 💡 Headlight */
+.trn-1 .t-head{position:absolute;left:-5px;top:50%;transform:translateY(-50%);width:10px;height:10px;background:radial-gradient(circle,#fff 30%,rgba(79,172,254,.8) 60%,transparent 100%);border-radius:50%;box-shadow:0 0 12px #fff,0 0 24px rgba(79,172,254,.9),0 0 50px rgba(79,172,254,.4),0 0 80px rgba(6,182,212,.2);animation:headGlow 2s ease-in-out infinite alternate}
+@keyframes headGlow{0%{box-shadow:0 0 12px #fff,0 0 24px rgba(79,172,254,.9),0 0 50px rgba(79,172,254,.4)}100%{box-shadow:0 0 16px #fff,0 0 30px rgba(79,172,254,1),0 0 60px rgba(79,172,254,.5),0 0 90px rgba(6,182,212,.25)}}
+
+/* 🪟 Windows */
+.trn-1 .t-win{position:absolute;top:6px;left:28px;display:flex;gap:6px}
+.tw{width:9px;height:14px;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(200,230,255,.35));border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,.3),inset 0 0 3px rgba(79,172,254,.2);animation:winFlicker 3s ease-in-out infinite}
+.tw:nth-child(2n){animation-delay:.5s}
+.tw:nth-child(3n){animation-delay:1s}
+@keyframes winFlicker{0%,100%{opacity:.5}50%{opacity:.9}}
+
+/* 🔥 Underbody Glow */
+.trn-1 .t-body::after{content:'';position:absolute;bottom:-6px;left:15%;width:70%;height:8px;background:linear-gradient(90deg,transparent,rgba(6,182,212,.35),rgba(79,172,254,.25),transparent);border-radius:50%;filter:blur(4px);animation:underGlow 2s ease-in-out infinite alternate}
+@keyframes underGlow{0%{opacity:.5;width:60%}100%{opacity:.8;width:75%}}
+
+/* 💨 Motion Trail */
+.t-trail{height:4px;border-radius:2px;filter:blur(5px);flex-shrink:0}
+.trn-1 .t-trail{width:130px;background:linear-gradient(90deg,rgba(79,172,254,.3),rgba(6,182,212,.15),transparent);margin-left:-6px}
+
+/* ✨ Sparkle Particles */
+.t-sparks{position:absolute;right:-15px;top:50%;transform:translateY(-50%)}
+.t-sp{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 6px rgba(79,172,254,.6);animation:spk 1.4s ease-out infinite}
+.t-sp:nth-child(2){animation-delay:.2s;top:-8px;right:14px;width:2px;height:2px}
+.t-sp:nth-child(3){animation-delay:.4s;top:6px;right:26px}
+.t-sp:nth-child(4){animation-delay:.6s;top:-4px;right:40px;width:2px;height:2px}
+.t-sp:nth-child(5){animation-delay:.8s;right:52px;top:3px}
+.t-sp:nth-child(6){animation-delay:1s;right:66px;top:-6px;width:2px;height:2px}
+@keyframes spk{0%{opacity:1;transform:scale(1) translateX(0)}100%{opacity:0;transform:scale(0) translateX(20px)}}
+
+@keyframes trnSlide1{0%{transform:translateX(-250px) translateZ(0)}100%{transform:translateX(calc(100vw + 250px)) translateZ(0)}}
+
+/* 🟪 Secondary Train — Top Edge (Right→Left, Smaller, Purple) */
+.trn-2{top:12%;animation:trnSlide2 26s linear infinite 4s;opacity:.4;filter:drop-shadow(0 0 10px rgba(139,92,246,.3))}
+.trn-2 .t-body{width:120px;height:22px;background:linear-gradient(135deg,rgba(139,92,246,.45),rgba(99,102,241,.5) 40%,rgba(79,172,254,.4) 80%,rgba(139,92,246,.3));border-radius:11px 4px 4px 11px;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 20px rgba(139,92,246,.2),inset 0 1px 0 rgba(255,255,255,.15);transform:scaleX(-1);position:relative}
+.trn-2 .t-head{position:absolute;right:-3px;top:50%;transform:translateY(-50%);width:6px;height:6px;background:#fff;border-radius:50%;box-shadow:0 0 8px #fff,0 0 18px rgba(139,92,246,.7)}
+.trn-2 .t-win{position:absolute;top:4px;right:20px;display:flex;gap:5px;transform:scaleX(-1)}
+.trn-2 .tw{width:6px;height:10px}
+.trn-2 .t-trail{width:90px;background:linear-gradient(270deg,rgba(139,92,246,.2),transparent);filter:blur(6px);margin-right:-4px}
+@keyframes trnSlide2{0%{transform:translateX(calc(100vw + 200px)) translateZ(0)}100%{transform:translateX(-200px) translateZ(0)}}
+
+/* 🔵 Distant Train — Middle (Very Subtle) */
+.trn-3{bottom:43%;animation:trnSlide3 35s linear infinite 10s;opacity:.12}
+.trn-3 .t-body{width:75px;height:13px;background:linear-gradient(90deg,rgba(6,182,212,.3),rgba(79,172,254,.22),rgba(99,102,241,.18));border-radius:6px 2px 2px 6px;box-shadow:0 0 10px rgba(6,182,212,.1)}
+.trn-3 .t-trail{width:50px;background:linear-gradient(90deg,rgba(6,182,212,.12),transparent);filter:blur(4px)}
+@keyframes trnSlide3{0%{transform:translateX(-120px) scale(.75) translateZ(0)}100%{transform:translateX(calc(100vw + 120px)) scale(.75) translateZ(0)}}
+
+/* 📱 Responsive */
+@media(max-width:768px){.trn-2,.trn-3{display:none}.trn-1 .t-body{width:110px;height:22px}.train-layer{opacity:.55}}
+@media(max-width:480px){.train-layer{opacity:.3}.trn-1 .t-body{width:80px;height:16px}.trn-1 .t-trail{width:60px}}
+@media(prefers-reduced-motion:reduce){.train-layer{display:none}}
 </style>
 </head>
 <body>
@@ -281,6 +350,35 @@ a{text-decoration:none;color:inherit}
     <div class="particle"></div><div class="particle"></div><div class="particle"></div>
     <div class="particle"></div><div class="particle"></div><div class="particle"></div>
     <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+</div>
+
+<!-- 🚄 Cinematic Train Animation Layer -->
+<div class="train-layer" id="trainLayer">
+    <div class="trk trk-1"></div>
+    <div class="trk trk-2"></div>
+    <div class="trk trk-3"></div>
+    <!-- Primary Train -->
+    <div class="trn trn-1">
+        <div class="t-trail"></div>
+        <div class="t-body">
+            <div class="t-head"></div>
+            <div class="t-win"><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div></div>
+        </div>
+        <div class="t-sparks"><div class="t-sp"></div><div class="t-sp"></div><div class="t-sp"></div><div class="t-sp"></div><div class="t-sp"></div><div class="t-sp"></div></div>
+    </div>
+    <!-- Secondary Train -->
+    <div class="trn trn-2">
+        <div class="t-body">
+            <div class="t-head"></div>
+            <div class="t-win"><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div></div>
+        </div>
+        <div class="t-trail"></div>
+    </div>
+    <!-- Distant Train -->
+    <div class="trn trn-3">
+        <div class="t-body"></div>
+        <div class="t-trail"></div>
+    </div>
 </div>
 
 <!-- Toast Container -->
@@ -658,6 +756,27 @@ window.addEventListener('DOMContentLoaded', () => {
         $('username').value = remembered;
     }
 });
+
+/* 🚄 Smart Train Animation Behavior */
+(function(){
+    const layer = document.getElementById('trainLayer');
+    if(!layer) return;
+    const trains = layer.querySelectorAll('.trn');
+    
+    // Pause when tab is hidden
+    document.addEventListener('visibilitychange', () => {
+        const state = document.hidden ? 'paused' : 'running';
+        trains.forEach(t => t.style.animationPlayState = state);
+    });
+    
+    // Dim when user interacts with inputs
+    document.addEventListener('focusin', e => {
+        if(e.target.matches('input, textarea, select')) layer.classList.add('dimmed');
+    });
+    document.addEventListener('focusout', e => {
+        if(e.target.matches('input, textarea, select')) layer.classList.remove('dimmed');
+    });
+})();
 </script>
 </body>
 </html>

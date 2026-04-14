@@ -576,12 +576,84 @@ body.dark .col-filter-bar { background:rgba(255,255,255,.02); }
 .pd-body a:hover { background:rgba(0,0,0,0.04); }
 body.dark .pd-body a:hover { background:rgba(255,255,255,0.06); }
 
-/* ═══════════════════════════════════════ ACTIVITY LOG ═══════════════════════════════════════ */
+/* ═════════════════════════════ ACTIVITY LOG ═══════════════════════════════════════ */
+
+/* ═══════════════════ 🚄 CINEMATIC TRAIN ANIMATION ═══════════════════ */
+.train-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;perspective:1200px;transition:opacity .8s ease;opacity:.45}
+.train-layer.dimmed{opacity:.1}
+body.dark .train-layer{opacity:.3}
+
+.trk{position:absolute;height:1px;width:250%;left:-75%}
+.trk-1{bottom:8%;background:linear-gradient(90deg,transparent 5%,rgba(79,172,254,.08) 25%,rgba(6,182,212,.06) 50%,rgba(79,172,254,.05) 75%,transparent 95%);animation:trkPulse 4s ease-in-out infinite}
+.trk-2{top:6%;background:linear-gradient(90deg,transparent 5%,rgba(139,92,246,.05) 30%,rgba(79,172,254,.04) 60%,transparent 95%);animation:trkPulse 5s ease-in-out infinite 1s}
+@keyframes trkPulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+.trn{position:absolute;will-change:transform;display:flex;align-items:center}
+
+.trn-1{bottom:7%;animation:trnSlide1 22s cubic-bezier(.4,0,.6,1) infinite}
+.trn-1 .t-body{width:150px;height:28px;background:linear-gradient(135deg,rgba(59,130,246,.4),rgba(6,182,212,.55) 35%,rgba(79,172,254,.45) 65%,rgba(99,102,241,.3));border-radius:14px 5px 5px 14px;position:relative;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);box-shadow:0 0 25px rgba(79,172,254,.2),0 0 50px rgba(6,182,212,.08),inset 0 1px 0 rgba(255,255,255,.2)}
+
+.trn-1 .t-head{position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:8px;height:8px;background:radial-gradient(circle,#fff 30%,rgba(79,172,254,.7) 60%,transparent 100%);border-radius:50%;box-shadow:0 0 10px #fff,0 0 20px rgba(79,172,254,.8),0 0 40px rgba(79,172,254,.3);animation:headGlow 2s ease-in-out infinite alternate}
+@keyframes headGlow{0%{box-shadow:0 0 10px #fff,0 0 20px rgba(79,172,254,.8),0 0 40px rgba(79,172,254,.3)}100%{box-shadow:0 0 14px #fff,0 0 28px rgba(79,172,254,.9),0 0 50px rgba(79,172,254,.4)}}
+
+.trn-1 .t-win{position:absolute;top:5px;left:24px;display:flex;gap:5px}
+.tw{width:8px;height:13px;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(200,230,255,.3));border-radius:2px;box-shadow:0 0 4px rgba(255,255,255,.25);animation:winFlicker 3s ease-in-out infinite}
+.tw:nth-child(2n){animation-delay:.5s}
+.tw:nth-child(3n){animation-delay:1s}
+@keyframes winFlicker{0%,100%{opacity:.4}50%{opacity:.8}}
+
+.trn-1 .t-body::after{content:'';position:absolute;bottom:-5px;left:15%;width:70%;height:6px;background:linear-gradient(90deg,transparent,rgba(6,182,212,.25),rgba(79,172,254,.18),transparent);border-radius:50%;filter:blur(3px);animation:underGlow 2s ease-in-out infinite alternate}
+@keyframes underGlow{0%{opacity:.4}100%{opacity:.7}}
+
+.t-trail{height:3px;border-radius:2px;filter:blur(4px);flex-shrink:0}
+.trn-1 .t-trail{width:110px;background:linear-gradient(90deg,rgba(79,172,254,.25),rgba(6,182,212,.1),transparent);margin-left:-5px}
+
+.t-sparks{position:absolute;right:-12px;top:50%;transform:translateY(-50%)}
+.t-sp{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(255,255,255,.8);box-shadow:0 0 4px rgba(79,172,254,.5);animation:spk 1.4s ease-out infinite}
+.t-sp:nth-child(2){animation-delay:.25s;top:-6px;right:12px}
+.t-sp:nth-child(3){animation-delay:.5s;top:5px;right:24px}
+.t-sp:nth-child(4){animation-delay:.75s;top:-3px;right:36px}
+@keyframes spk{0%{opacity:1;transform:scale(1) translateX(0)}100%{opacity:0;transform:scale(0) translateX(15px)}}
+
+@keyframes trnSlide1{0%{transform:translateX(-220px) translateZ(0)}100%{transform:translateX(calc(100vw + 220px)) translateZ(0)}}
+
+.trn-2{top:5%;animation:trnSlide2 30s linear infinite 6s;opacity:.25}
+.trn-2 .t-body{width:100px;height:18px;background:linear-gradient(135deg,rgba(139,92,246,.35),rgba(99,102,241,.4) 40%,rgba(79,172,254,.3));border-radius:9px 3px 3px 9px;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 15px rgba(139,92,246,.15);transform:scaleX(-1);position:relative}
+.trn-2 .t-head{position:absolute;right:-2px;top:50%;transform:translateY(-50%);width:4px;height:4px;background:#fff;border-radius:50%;box-shadow:0 0 6px #fff,0 0 14px rgba(139,92,246,.5)}
+.trn-2 .t-trail{width:70px;background:linear-gradient(270deg,rgba(139,92,246,.15),transparent);filter:blur(5px)}
+@keyframes trnSlide2{0%{transform:translateX(calc(100vw + 150px)) translateZ(0)}100%{transform:translateX(-150px) translateZ(0)}}
+
+@media(max-width:1024px){.trn-2{display:none}.train-layer{opacity:.3}}
+@media(max-width:768px){.train-layer{opacity:.2}.trn-1 .t-body{width:90px;height:18px}}
+@media(max-width:480px){.train-layer{display:none}}
+@media(prefers-reduced-motion:reduce){.train-layer{display:none}}
     </style>
 </head>
 <body>
     <div class="amb"></div>
     <div id="toasts"></div>
+
+    <!-- 🚄 Cinematic Train Animation Layer -->
+    <div class="train-layer" id="trainLayer">
+        <div class="trk trk-1"></div>
+        <div class="trk trk-2"></div>
+        <!-- Primary Train -->
+        <div class="trn trn-1">
+            <div class="t-trail"></div>
+            <div class="t-body">
+                <div class="t-head"></div>
+                <div class="t-win"><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div><div class="tw"></div></div>
+            </div>
+            <div class="t-sparks"><div class="t-sp"></div><div class="t-sp"></div><div class="t-sp"></div><div class="t-sp"></div></div>
+        </div>
+        <!-- Secondary Train -->
+        <div class="trn trn-2">
+            <div class="t-body">
+                <div class="t-head"></div>
+            </div>
+            <div class="t-trail"></div>
+        </div>
+    </div>
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <!-- Notifications Panel -->
@@ -3028,6 +3100,25 @@ document.addEventListener('keydown', e => {
         toggleDebugPanel();
     }
 });
+
+/* 🚄 Smart Train Animation Behavior */
+(function(){
+    const layer = document.getElementById('trainLayer');
+    if(!layer) return;
+    const trains = layer.querySelectorAll('.trn');
+    
+    document.addEventListener('visibilitychange', () => {
+        const state = document.hidden ? 'paused' : 'running';
+        trains.forEach(t => t.style.animationPlayState = state);
+    });
+    
+    document.addEventListener('focusin', e => {
+        if(e.target.matches('input, textarea, select')) layer.classList.add('dimmed');
+    });
+    document.addEventListener('focusout', e => {
+        if(e.target.matches('input, textarea, select')) layer.classList.remove('dimmed');
+    });
+})();
 </script>
 </body>
 </html>
