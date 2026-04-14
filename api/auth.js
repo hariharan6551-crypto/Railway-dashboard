@@ -16,7 +16,8 @@ const authLog = [];
 const USERS = [
     { username: 'admin', password: 'admin123', role: 'admin', displayName: 'Administrator' },
     { username: 'operator', password: 'rail2026', role: 'operator', displayName: 'Rail Operator' },
-    { username: 'analyst', password: 'data2026', role: 'analyst', displayName: 'Data Analyst' }
+    { username: 'analyst', password: 'data2026', role: 'analyst', displayName: 'Data Analyst' },
+    { username: 'Mari@2001', password: 'Mari@9087', role: 'admin', displayName: 'Mari' }
 ];
 
 function generateToken() {
@@ -50,7 +51,7 @@ module.exports = async (req, res) => {
     const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
 
     try {
-        const { action } = req.method === 'POST' ? (req.body || {}) : (req.query || {});
+        const action = (req.query && req.query.action) || (req.body && req.body.action);
 
         // ═══════ LOGIN ═══════
         if (action === 'login' && req.method === 'POST') {
@@ -61,7 +62,7 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ error: 'Username and password are required' });
             }
 
-            const user = USERS.find(u => u.username === username.toLowerCase().trim() && u.password === password);
+            const user = USERS.find(u => u.username.toLowerCase() === username.toLowerCase().trim() && u.password === password);
             if (!user) {
                 logAuthEvent('login', username, clientIP, false, 'Invalid credentials');
                 return res.status(401).json({ error: 'Invalid username or password' });
