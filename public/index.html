@@ -533,76 +533,6 @@ body.dark .col-filter-bar { background:rgba(255,255,255,.02); }
 .excel-table tbody tr { transition:background .15s,transform .1s; }
 .excel-table tbody tr:hover { transform:translateX(2px); }
 
-/* ═══════════════════════════════════════ ADMIN DROPDOWN ═══════════════════════════════════════ */
-.admin-wrap { position:relative; }
-.admin-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--p2)); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.85rem; font-weight:800; color:#fff; border:2px solid var(--p); transition:all .25s; flex-shrink:0; letter-spacing:.5px; }
-.admin-avatar:hover { transform:scale(1.08); box-shadow:0 4px 16px rgba(59,130,246,.35); }
-.admin-dropdown { position:absolute; top:calc(100% + 10px); right:0; width:260px; border-radius:16px; z-index:200; overflow:hidden; opacity:0; transform:translateY(-8px) scale(.96); pointer-events:none; transition:all .25s cubic-bezier(.16,1,.3,1); }
-.admin-dropdown.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
-.admin-dropdown .ad-header { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; }
-.admin-dropdown .ad-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--p3)); display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800; color:#fff; flex-shrink:0; }
-.admin-dropdown .ad-info { min-width:0; }
-.admin-dropdown .ad-info h4 { font-size:.9rem; font-weight:700; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.admin-dropdown .ad-info span { font-size:.75rem; color:var(--txt3); font-weight:500; }
-.admin-dropdown .ad-role-badge { display:inline-flex; padding:2px 10px; border-radius:10px; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; background:rgba(59,130,246,.1); color:var(--p); border:1px solid rgba(59,130,246,.15); }
-.admin-dropdown .ad-menu { padding:8px; }
-.admin-dropdown .ad-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; font-size:.88rem; font-weight:600; color:var(--txt); cursor:pointer; transition:all .15s; }
-.admin-dropdown .ad-item:hover { background:rgba(59,130,246,.08); color:var(--p); }
-.admin-dropdown .ad-item i { width:18px; text-align:center; font-size:.9rem; color:var(--txt3); transition:color .15s; }
-.admin-dropdown .ad-item:hover i { color:var(--p); }
-.admin-dropdown .ad-divider { height:1px; background:var(--border); margin:4px 12px; }
-.admin-dropdown .ad-item.danger { color:var(--d); }
-.admin-dropdown .ad-item.danger:hover { background:rgba(239,68,68,.08); }
-.admin-dropdown .ad-item.danger i { color:var(--d); }
-.admin-dropdown .ad-footer { padding:10px 16px; border-top:1px solid var(--border); font-size:.7rem; color:var(--txt3); text-align:center; }
-
-/* ═══════════════════════════════════════ ACTIVITY LOG PAGE ═══════════════════════════════════════ */
-.activity-timeline { position:relative; padding-left:32px; }
-.activity-timeline::before { content:''; position:absolute; left:11px; top:0; bottom:0; width:2px; background:linear-gradient(to bottom,var(--p),var(--p2),var(--p3)); border-radius:1px; opacity:.3; }
-.activity-item { position:relative; padding:16px 20px; margin-bottom:12px; border-radius:var(--r); transition:transform .2s; }
-.activity-item:hover { transform:translateX(4px); }
-.activity-item::before { content:''; position:absolute; left:-27px; top:22px; width:12px; height:12px; border-radius:50%; border:2px solid var(--bg); z-index:2; }
-.activity-item.login::before { background:var(--s); box-shadow:0 0 8px rgba(16,185,129,.4); }
-.activity-item.upload::before { background:var(--p); box-shadow:0 0 8px rgba(59,130,246,.4); }
-.activity-item.update::before { background:var(--w); box-shadow:0 0 8px rgba(245,158,11,.4); }
-.activity-item.delete::before { background:var(--d); box-shadow:0 0 8px rgba(239,68,68,.4); }
-.activity-item.view::before { background:var(--p3); box-shadow:0 0 8px rgba(139,92,246,.4); }
-.activity-item.system::before { background:var(--p2); box-shadow:0 0 8px rgba(6,182,212,.4); }
-.ai-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-.ai-top h4 { font-size:.9rem; font-weight:700; display:flex; align-items:center; gap:8px; }
-.ai-top .ai-time { font-size:.72rem; color:var(--txt3); font-weight:500; flex-shrink:0; }
-.ai-detail { font-size:.84rem; color:var(--txt2); line-height:1.6; }
-.ai-meta { display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
-.ai-meta-tag { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:8px; font-size:.7rem; font-weight:600; background:rgba(0,0,0,.03); color:var(--txt3); }
-body.dark .ai-meta-tag { background:rgba(255,255,255,.04); }
-.ai-action-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
-.ai-action-icon.login { background:rgba(16,185,129,.12); color:var(--s); }
-.ai-action-icon.upload { background:rgba(59,130,246,.12); color:var(--p); }
-.ai-action-icon.update { background:rgba(245,158,11,.12); color:var(--w); }
-.ai-action-icon.delete { background:rgba(239,68,68,.12); color:var(--d); }
-.ai-action-icon.view { background:rgba(139,92,246,.12); color:var(--p3); }
-.ai-action-icon.system { background:rgba(6,182,212,.12); color:var(--p2); }
-
-.activity-filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
-.activity-filters select, .activity-filters input { padding:8px 14px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--txt); font-size:.82rem; outline:none; font-weight:500; }
-.activity-filters select:focus, .activity-filters input:focus { border-color:var(--p); box-shadow:0 0 0 3px rgba(59,130,246,.1); }
-.activity-stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
-.activity-stat { padding:16px; border-radius:14px; text-align:center; }
-.activity-stat .as-val { font-size:1.5rem; font-weight:800; margin-bottom:4px; }
-.activity-stat .as-label { font-size:.75rem; color:var(--txt3); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
-
-/* Upload History Table */
-.upload-history-table { width:100%; border-collapse:separate; border-spacing:0; }
-.upload-history-table th { text-align:left; padding:12px 14px; font-size:.75rem; font-weight:600; color:var(--txt3); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.02); position:sticky; top:0; z-index:1; }
-body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
-.upload-history-table td { padding:12px 14px; font-size:.85rem; border-bottom:1px solid var(--border2); }
-.upload-history-table tr:hover td { background:rgba(59,130,246,.04); }
-.upload-history-table tr { transition:background .15s; }
-.uht-user { display:flex; align-items:center; gap:8px; }
-.uht-user-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--p2)); display:flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:800; color:#fff; flex-shrink:0; }
-.status-live { color:var(--s); font-weight:700; }
-.status-static { color:var(--txt3); font-weight:600; }
-
 /* ═══════════════════════════════════════ RESPONSIVE ═══════════════════════════════════════ */
 @media(max-width:1200px) {
     .charts-grid { grid-template-columns:1fr; }
@@ -613,7 +543,6 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
     .contact-grid { grid-template-columns:1fr; }
     .search-box { width:220px; }
     .search-box:focus-within { width:260px; }
-    .admin-dropdown { right:-20px; }
 }
 @media(max-width:768px) {
     .sidebar { position:fixed; left:-260px; z-index:100; }
@@ -631,15 +560,23 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
     .page { padding:20px; }
     .notif-panel { width:calc(100vw - 32px); right:16px; }
     .sheets-url-row { flex-direction:column; }
-    .admin-dropdown { width:240px; }
-    .activity-stats-row { grid-template-columns:1fr 1fr; }
 }
 @media(max-width:480px) {
     .kpi-grid { grid-template-columns:1fr; }
     .chatbot { width:calc(100vw - 24px); right:12px; bottom:80px; height:70vh; }
     .fab { width:54px; height:54px; right:16px; bottom:16px; font-size:1.2rem; }
-    .activity-stats-row { grid-template-columns:1fr; }
 }
+/* ═══════════════════════════════════════ DROPDOWN ═══════════════════════════════════════ */
+.profile-dropdown-wrap { position:relative; }
+.profile-dropdown { position:absolute; top:calc(100% + 12px); right:0; width:220px; border-radius:var(--r); transform:translateY(10px); opacity:0; pointer-events:none; transition:all 0.3s cubic-bezier(0.16,1,0.3,1); z-index:100; overflow:hidden; }
+.profile-dropdown.open { transform:translateY(0); opacity:1; pointer-events:all; }
+.pd-head { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px; }
+.pd-body { display:flex; flex-direction:column; padding:8px; }
+.pd-body a { padding:10px 12px; border-radius:8px; font-size:0.88rem; font-weight:600; display:flex; align-items:center; gap:12px; transition:background 0.2s; }
+.pd-body a:hover { background:rgba(0,0,0,0.04); }
+body.dark .pd-body a:hover { background:rgba(255,255,255,0.06); }
+
+/* ═══════════════════════════════════════ ACTIVITY LOG ═══════════════════════════════════════ */
     </style>
 </head>
 <body>
@@ -667,8 +604,8 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
                 <a data-page="dashboard" class="active"><i class="fa-solid fa-chart-pie"></i><span class="hide-c">Dashboard</span></a>
                 <a data-page="upload"><i class="fa-solid fa-cloud-arrow-up"></i><span class="hide-c">Upload Files</span><span class="hide-c nav-badge" id="uploadBadge" style="display:none">0</span></a>
                 <a data-page="analytics"><i class="fa-solid fa-chart-line"></i><span class="hide-c">Analytics</span></a>
+                <a data-page="history"><i class="fa-solid fa-clock-rotate-left"></i><span class="hide-c">History Log</span></a>
                 <a data-page="map"><i class="fa-solid fa-map-location-dot"></i><span class="hide-c">Map</span></a>
-                <a data-page="activity"><i class="fa-solid fa-clock-rotate-left"></i><span class="hide-c">Activity Log</span></a>
                 <a data-page="contact"><i class="fa-solid fa-envelope"></i><span class="hide-c">Contact</span></a>
             </nav>
             <div class="sb-footer hide-c">
@@ -698,37 +635,18 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
                     <div class="live-badge" id="liveBadge" title="Real-time sync status"><span id="liveTime"></span> LIVE</div>
                     <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
                     <button class="icon-btn" id="notifToggle" aria-label="Notifications"><i class="fa-solid fa-bell"></i><span class="badge-dot" id="notifBadge">5</span></button>
-                    <div class="admin-wrap" id="adminWrap">
-                        <div class="admin-avatar" id="adminAvatar" title="Admin menu">AD</div>
-                        <div class="admin-dropdown glass" id="adminDropdown">
-                            <div class="ad-header">
-                                <div class="ad-avatar" id="adAvatarIcon">AD</div>
-                                <div class="ad-info">
-                                    <h4 id="adDisplayName">Administrator</h4>
-                                    <span id="adEmail">admin@railway.ai</span>
-                                    <div style="margin-top:4px"><span class="ad-role-badge" id="adRoleBadge">ADMIN</span></div>
-                                </div>
+                    <!-- Admin Profile Dropdown -->
+                    <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+                        <div class="avatar" id="profileAvatar"><img src="https://ui-avatars.com/api/?name=AD&background=3b82f6&color=fff&bold=true" alt="Admin" id="userAvatarImg"></div>
+                        <div class="profile-dropdown glass" id="profileDropdown">
+                            <div class="pd-head">
+                                <strong id="pdUserName">Administrator</strong>
+                                <span id="pdUserRole" style="font-size:0.75rem;color:var(--txt3);text-transform:uppercase">ADMIN</span>
                             </div>
-                            <div class="ad-menu">
-                                <div class="ad-item" onclick="navigateTo('dashboard');closeAdminDropdown()">
-                                    <i class="fa-solid fa-chart-pie"></i> Dashboard
-                                </div>
-                                <div class="ad-item" onclick="navigateTo('activity');closeAdminDropdown()">
-                                    <i class="fa-solid fa-clock-rotate-left"></i> Activity Log
-                                </div>
-                                <div class="ad-divider"></div>
-                                <div class="ad-item" onclick="toast('Profile settings coming soon','info');closeAdminDropdown()">
-                                    <i class="fa-solid fa-user-gear"></i> Profile Settings
-                                </div>
-                                <div class="ad-item" onclick="toast('System preferences coming soon','info');closeAdminDropdown()">
-                                    <i class="fa-solid fa-gear"></i> Preferences
-                                </div>
-                                <div class="ad-divider"></div>
-                                <div class="ad-item danger" onclick="handleLogout()">
-                                    <i class="fa-solid fa-right-from-bracket"></i> Sign Out
-                                </div>
+                            <div class="pd-body">
+                                <a href="#" onclick="toast('Settings under construction', 'info')"><i class="fa-solid fa-gear"></i> Settings</a>
+                                <a href="#" onclick="handleLogout()" style="color:var(--d)"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
                             </div>
-                            <div class="ad-footer" id="adFooter">Session started: just now</div>
                         </div>
                     </div>
                 </div>
@@ -800,7 +718,7 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
                     <div class="chart-card glass" style="padding:0;overflow:hidden">
                         <div class="file-table-wrap">
                             <table class="file-table" id="recentFilesTable">
-                                <thead><tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Version</th><th>Status</th></tr></thead>
+                                <thead><tr><th>File</th><th>Uploaded By</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Version</th><th>Status</th></tr></thead>
                                 <tbody id="recentFilesBody"></tbody>
                             </table>
                         </div>
@@ -939,88 +857,30 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
                     </div>
                 </section>
 
-                <!-- ═══════════════════ ACTIVITY LOG PAGE ═══════════════════ -->
-                <section id="page-activity" class="page">
-                    <h1 class="page-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--p);margin-right:10px"></i>Activity Log & Audit Trail</h1>
-                    <p class="page-desc">Complete history of all user actions, file operations, and system events</p>
+                <!-- ═══════════════════ HISTORY PAGE ═══════════════════ -->
+                <section id="page-history" class="page">
+                    <h1 class="page-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--p);margin-right:10px"></i>Activity History</h1>
+                    <p class="page-desc">Complete audit log of system events, uploads, and data synchronizations</p>
 
-                    <!-- Activity Stats -->
-                    <div class="activity-stats-row" id="activityStats">
-                        <div class="activity-stat glass">
-                            <div class="as-val" style="color:var(--p)" id="asTotal">0</div>
-                            <div class="as-label">Total Events</div>
+                    <div class="filter-bar">
+                        <div class="search-box" style="width:280px">
+                            <i class="fa-solid fa-filter"></i>
+                            <input type="text" placeholder="Filter by action, user..." id="historySearch" oninput="renderHistory()">
                         </div>
-                        <div class="activity-stat glass">
-                            <div class="as-val" style="color:var(--s)" id="asLogins">0</div>
-                            <div class="as-label">Logins</div>
-                        </div>
-                        <div class="activity-stat glass">
-                            <div class="as-val" style="color:var(--p2)" id="asUploads">0</div>
-                            <div class="as-label">Uploads</div>
-                        </div>
-                        <div class="activity-stat glass">
-                            <div class="as-val" style="color:var(--w)" id="asUpdates">0</div>
-                            <div class="as-label">Updates</div>
-                        </div>
-                        <div class="activity-stat glass">
-                            <div class="as-val" style="color:var(--d)" id="asDeletes">0</div>
-                            <div class="as-label">Deletions</div>
-                        </div>
+                        <button class="btn btn-s" onclick="clearHistory()"><i class="fa-solid fa-trash"></i> Clear Log</button>
                     </div>
 
-                    <!-- Upload History -->
-                    <div class="section-header">
-                        <h2><i class="fa-solid fa-file-arrow-up" style="color:var(--p);margin-right:8px"></i>File Upload History</h2>
-                        <button class="btn btn-s" onclick="refreshActivityData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-                    </div>
-                    <div class="chart-card glass" style="padding:0;overflow:hidden;margin-bottom:28px">
-                        <div class="file-table-wrap" style="max-height:340px;overflow-y:auto">
-                            <table class="upload-history-table" id="uploadHistoryTable">
-                                <thead>
-                                    <tr>
-                                        <th>Uploaded By</th>
-                                        <th>File Name</th>
-                                        <th>Type</th>
-                                        <th>Upload Time</th>
-                                        <th>Version</th>
-                                        <th>Times Uploaded</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="uploadHistoryBody"></tbody>
+                    <div class="chart-card glass" style="padding:0;overflow:hidden">
+                        <div class="file-table-wrap">
+                            <table class="file-table">
+                                <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Target</th></tr></thead>
+                                <tbody id="historyTableBody"></tbody>
                             </table>
                         </div>
-                        <div class="empty-state" id="noUploadHistory" style="display:none">
-                            <i class="fa-solid fa-file-circle-check"></i>
-                            <h3>No upload history</h3>
-                            <p>File uploads will be tracked here automatically</p>
-                        </div>
-                    </div>
-
-                    <!-- Activity Timeline -->
-                    <div class="section-header">
-                        <h2><i class="fa-solid fa-timeline" style="color:var(--p3);margin-right:8px"></i>Activity Timeline</h2>
-                    </div>
-                    <div class="activity-filters">
-                        <select id="activityFilterUser" onchange="renderActivityTimeline()">
-                            <option value="all">All Users</option>
-                        </select>
-                        <select id="activityFilterType" onchange="renderActivityTimeline()">
-                            <option value="all">All Actions</option>
-                            <option value="login">Logins</option>
-                            <option value="file_upload">Uploads</option>
-                            <option value="file_update">Updates</option>
-                            <option value="file_delete">Deletions</option>
-                            <option value="file_view">Views</option>
-                            <option value="system">System</option>
-                        </select>
-                        <input type="text" id="activitySearch" placeholder="Search activities..." oninput="renderActivityTimeline()" style="flex:1;min-width:180px">
-                    </div>
-                    <div class="activity-timeline" id="activityTimeline">
-                        <div class="empty-state" id="noActivity">
-                            <i class="fa-solid fa-list-check"></i>
-                            <h3>No activities recorded</h3>
-                            <p>User actions will appear here in real-time</p>
+                        <div class="empty-state" id="noHistory" style="display:none">
+                            <i class="fa-solid fa-clock"></i>
+                            <h3>No activity yet</h3>
+                            <p>System events will be recorded here.</p>
                         </div>
                     </div>
                 </section>
@@ -1118,13 +978,9 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
 
 <script>
 /* ═════════════════════════════════════════════════════════════════════════════════════════════
-   RAILWAY INTELLIGENCE PLATFORM — PRODUCTION-GRADE REAL-TIME DATA ENGINE v4.0
+   RAILWAY INTELLIGENCE PLATFORM — PRODUCTION-GRADE REAL-TIME DATA ENGINE v3.0
    ═════════════════════════════════════════════════════════════════════════════════════════════
    Features:
-   ✅ Secure session-based authentication with auth guard
-   ✅ Admin profile dropdown with logout control
-   ✅ Full activity tracking & audit log system
-   ✅ File upload history with versioning
    ✅ Caching layer with 800ms auto-invalidation
    ✅ Exponential backoff retry (up to 5 retries)
    ✅ Schema validation before render
@@ -1144,51 +1000,12 @@ body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
    ✅ Prepared for pagination/virtualization
    ═════════════════════════════════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════ AUTH GUARD ═══════════════════════════════════════ */
-(function authGuard() {
-    const session = localStorage.getItem('rw_session');
-    if (!session) {
-        window.location.href = 'login.html';
-        return;
-    }
-    try {
-        const s = JSON.parse(session);
-        if (!s || !s.token || !s.user) {
-            localStorage.removeItem('rw_session');
-            window.location.href = 'login.html';
-            return;
-        }
-        // Session expires after 24 hours
-        if (!s.rememberMe && (Date.now() - s.loginTime > 86400000)) {
-            localStorage.removeItem('rw_session');
-            window.location.href = 'login.html';
-            return;
-        }
-    } catch(e) {
-        localStorage.removeItem('rw_session');
-        window.location.href = 'login.html';
-    }
-})();
-
-/* ═══════════════════════════════════════ SESSION HELPERS ═══════════════════════════════════════ */
-function getSession() {
-    try { return JSON.parse(localStorage.getItem('rw_session') || 'null'); } catch(e) { return null; }
-}
-
-function getCurrentUser() {
-    const s = getSession();
-    return s ? s.user : { username: 'admin', displayName: 'Administrator', role: 'admin' };
-}
-
-function getSessionToken() {
-    const s = getSession();
-    return s ? s.token : null;
-}
-
 /* ═══════════════════════════════════════ GLOBAL STATE ═══════════════════════════════════════ */
 const APP = {
+    user: null,
     files: [],
     fileMeta: JSON.parse(localStorage.getItem('rw_meta') || '[]'),
+    activities: JSON.parse(localStorage.getItem('rw_activity') || '[]'),
     page: 'dashboard',
     charts: {},
     currentSlide: 0,
@@ -1205,16 +1022,84 @@ const APP = {
     notifs: [
         { t: 'System Online', d: 'All monitoring systems operational', time: 'Just now', ts: Date.now(), unread: true },
         { t: 'AI Model v3.2 Active', d: 'Prediction engine loaded with latest weights', time: '15 min ago', ts: Date.now() - 900000 },
-        { t: 'Data Sync Complete', d: 'All file matrices synchronized successfully', time: '1 hr ago', ts: Date.now() - 3600000 },
-        { t: 'Revenue Insight', d: 'Northern zone revenue up 12.4% this quarter', time: '2 hr ago', ts: Date.now() - 7200000 },
-        { t: 'WebSocket Connected', d: 'Real-time data pipeline established', time: '5 hr ago', ts: Date.now() - 18000000 }
+        { t: 'Data Sync Complete', d: 'All file matrices synchronized successfully', time: '1 hr ago', ts: Date.now() - 3600000 }
     ],
     liveInterval: null,
     syncInterval: null,
-    versionHistory: {},
-    activityLog: [],  // Local activity log
-    uploadHistory: [] // Upload tracking
+    versionHistory: {}
 };
+
+/* ═══════════════════════════════════════ AUTHENTICATION ═══════════════════════════════════════ */
+async function validateAuth() {
+    const token = localStorage.getItem('rw_token');
+    const userStr = localStorage.getItem('rw_user');
+    
+    if (!token || !userStr) {
+        window.location.href = 'login.html';
+        return false;
+    }
+
+    try {
+        APP.user = JSON.parse(userStr);
+        // Setup UI with user details
+        const initials = (APP.user.displayName || APP.user.username).substring(0, 2).toUpperCase();
+        $('userAvatarImg').src = `https://ui-avatars.com/api/?name=${initials}&background=3b82f6&color=fff&bold=true`;
+        $('pdUserName').textContent = APP.user.displayName || APP.user.username;
+        $('pdUserRole').textContent = APP.user.role;
+
+        const res = await fetch('/api/auth?action=validate', {
+            method: 'GET',
+            headers: { 'X-Session-Token': token }
+        });
+        const data = await res.json();
+        
+        if (!res.ok || !data.valid) {
+            throw new Error('Session invalid');
+        }
+        return true;
+    } catch (e) {
+        localStorage.removeItem('rw_token');
+        localStorage.removeItem('rw_user');
+        window.location.href = 'login.html';
+        return false;
+    }
+}
+
+function handleLogout() {
+    const token = localStorage.getItem('rw_token');
+    logActivity('logout', 'Logged out of the system', 'System');
+    
+    if (token) {
+        fetch('/api/auth?action=logout', {
+            method: 'POST',
+            headers: { 'X-Session-Token': token }
+        }).catch(() => {});
+    }
+    
+    localStorage.removeItem('rw_token');
+    localStorage.removeItem('rw_user');
+    window.location.href = 'login.html';
+}
+
+/* ═══════════════════════════════════════ ACTIVITY LOGGER ═══════════════════════════════════════ */
+function logActivity(type, action, target) {
+    if (!APP.user) return; // Might happen during init before user is loaded
+    const event = {
+        id: Date.now().toString(36),
+        type,
+        user: APP.user.displayName || APP.user.username,
+        action,
+        target,
+        timestamp: Date.now()
+    };
+    APP.activities.unshift(event);
+    if (APP.activities.length > 500) APP.activities.pop();
+    localStorage.setItem('rw_activity', JSON.stringify(APP.activities));
+    
+    if (APP.page === 'history') {
+        renderHistory();
+    }
+}
 
 /* ═══════════════════════════════════════ DATA PIPELINE ENGINE ═══════════════════════════════════════ */
 const DataPipeline = {
@@ -1698,7 +1583,7 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sub
 function saveMeta() {
     const lite = APP.files.map(f => ({
         id: f.id, name: f.name, type: f.type, size: f.size,
-        uploadedAt: f.uploadedAt, version: f.version
+        uploadedAt: f.uploadedAt, version: f.version, uploadedBy: f.uploadedBy
     }));
     try { localStorage.setItem('rw_meta', JSON.stringify(lite)); } catch(e) {}
 }
@@ -1724,7 +1609,6 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-/* ═══════════════════════════════════════ NAVIGATION ═══════════════════════════════════════ */
 function navigateTo(page) {
     APP.page = page;
     $$('.page').forEach(p => p.classList.remove('active'));
@@ -1737,13 +1621,12 @@ function navigateTo(page) {
     if (page === 'dashboard') renderDashboard();
     if (page === 'upload') renderUploadPage();
     if (page === 'analytics') renderAnalytics();
-    if (page === 'activity') { renderActivityPage(); }
+    if (page === 'history') renderHistory();
 
-    // Log navigation
-    logActivity('navigation', null, null, `Navigated to ${page}`);
-
-    $('sidebar').classList.remove('mobile-open');
-    $('mobileOverlay').classList.remove('show');
+    if (window.innerWidth <= 768) {
+        $('sidebar').classList.remove('mobile-open');
+        $('mobileOverlay').classList.remove('show');
+    }
     document.querySelector('.page-wrap').scrollTop = 0;
 }
 
@@ -1937,8 +1820,6 @@ async function handleFiles(fileList) {
             toast(`✓ "${file.name}" updated to v${existing.version}`, 'success');
             addNotification(`File Updated: ${file.name}`, `Version ${existing.version} — ${type.toUpperCase()} data re-synchronized`);
             broadcastChange('file_updated', file.name);
-            logActivity('file_update', file.name, type, `Updated to v${existing.version}`);
-            trackUpload(file.name, type, file.size, existing.version, 'LIVE');
         } else {
             const fileObj = {
                 id: uid(), name: file.name, type, size: file.size,
@@ -1948,8 +1829,6 @@ async function handleFiles(fileList) {
             toast(`✓ "${file.name}" processed successfully!`, 'success');
             addNotification(`File Uploaded: ${file.name}`, `${type.toUpperCase()} file processed and synchronized`);
             broadcastChange('file_uploaded', file.name);
-            logActivity('file_upload', file.name, type, `Uploaded ${file.name} (v1)`);
-            trackUpload(file.name, type, file.size, 1, 'LIVE');
         }
 
         $('uploadBar').style.width = '100%';
@@ -1969,9 +1848,7 @@ function deleteFile(fileId, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
     const idx = APP.files.findIndex(f => f.id === fileId);
     if (idx === -1) return;
-    const file = APP.files[idx];
-    const name = file.name;
-    const type = file.type;
+    const name = APP.files[idx].name;
     APP.files.splice(idx, 1);
     saveMeta();
     updateUploadBadge();
@@ -1980,7 +1857,6 @@ function deleteFile(fileId, event) {
     toast(`"${name}" removed`, 'info');
     addNotification(`File Deleted: ${name}`, 'File removed from intelligence database');
     broadcastChange('file_deleted', name);
-    logActivity('file_delete', name, type, `Deleted ${name}`);
 }
 
 function updateUploadBadge() {
@@ -2154,7 +2030,6 @@ function openFilePreview(fileId) {
     if (!file) { toast('File not found. It may have been deleted.', 'error'); return; }
     if (!file.data) { toast('File data not available. Please re-upload.', 'error'); return; }
     APP.currentFile = file;
-    logActivity('file_view', file.name, file.type, `Viewed ${file.name}`);
 
     const icon = getFileIcon(file.type);
     const color = getFileColorVar(file.type);
@@ -3006,311 +2881,23 @@ if (mapImg) {
     });
 }
 
-/* ═══════════════════════════════════════ ADMIN DROPDOWN ═══════════════════════════════════════ */
-function initAdminDropdown() {
-    const session = getSession();
-    const user = getCurrentUser();
-    const initials = (user.displayName || 'AD').split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2);
-
-    const avatar = $('adminAvatar');
-    const adAvatar = $('adAvatarIcon');
-    const adName = $('adDisplayName');
-    const adEmail = $('adEmail');
-    const adRole = $('adRoleBadge');
-    const adFooter = $('adFooter');
-
-    if (avatar) avatar.textContent = initials;
-    if (adAvatar) adAvatar.textContent = initials;
-    if (adName) adName.textContent = user.displayName || user.username;
-    if (adEmail) adEmail.textContent = `${user.username}@railway.ai`;
-    if (adRole) adRole.textContent = (user.role || 'admin').toUpperCase();
-    if (adFooter && session) adFooter.textContent = `Session started: ${fmtTimeAgo(session.loginTime)}`;
-
-    // Toggle dropdown
-    avatar.addEventListener('click', (e) => {
-        e.stopPropagation();
-        $('adminDropdown').classList.toggle('open');
-    });
-
-    // Close on outside click
-    document.addEventListener('click', (e) => {
-        if (!$('adminWrap').contains(e.target)) {
-            $('adminDropdown').classList.remove('open');
-        }
-    });
-}
-
-function closeAdminDropdown() {
-    $('adminDropdown').classList.remove('open');
-}
-
-async function handleLogout() {
-    closeAdminDropdown();
-    const user = getCurrentUser();
-    logActivity('logout', null, null, `${user.displayName} logged out`);
-
-    // Call server logout (fire and forget)
-    const token = getSessionToken();
-    if (token) {
-        fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
-            body: JSON.stringify({ action: 'logout', token })
-        }).catch(() => {});
-    }
-
-    // Destroy session
-    localStorage.removeItem('rw_session');
-    toast('Signing out...', 'info');
-
-    // Redirect to login
-    setTimeout(() => {
-        window.location.href = 'login.html';
-    }, 800);
-}
-
-/* ═══════════════════════════════════════ ACTIVITY LOGGING ═══════════════════════════════════════ */
-function logActivity(actionType, fileName, fileType, details) {
-    const user = getCurrentUser();
-    const entry = {
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
-        username: user.username || 'admin',
-        displayName: user.displayName || 'Administrator',
-        actionType,
-        fileName,
-        fileType,
-        details: details || '',
-        timestamp: Date.now()
-    };
-
-    APP.activityLog.unshift(entry);
-    if (APP.activityLog.length > 500) APP.activityLog.length = 500;
-
-    // Persist to localStorage
-    try {
-        const stored = JSON.parse(localStorage.getItem('rw_activity') || '[]');
-        stored.unshift(entry);
-        if (stored.length > 200) stored.length = 200;
-        localStorage.setItem('rw_activity', JSON.stringify(stored));
-    } catch(e) {}
-
-    // Send to server (fire and forget)
-    fetch('/api/activity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'log', username: user.username, actionType, fileName, fileType, details })
-    }).catch(() => {});
-
-    // Update activity page if visible
-    if (APP.page === 'activity') renderActivityTimeline();
-}
-
-function trackUpload(fileName, fileType, fileSize, version, status) {
-    const user = getCurrentUser();
-    const existing = APP.uploadHistory.find(u => u.fileName === fileName);
-
-    if (existing) {
-        existing.version = version;
-        existing.versionLabel = `v${version}`;
-        existing.uploadCount++;
-        existing.lastUpdated = Date.now();
-        existing.lastUpdatedBy = user.username;
-        existing.fileSize = fileSize;
-        existing.status = status;
-    } else {
-        APP.uploadHistory.unshift({
-            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
-            username: user.username,
-            displayName: user.displayName,
-            fileName,
-            fileType,
-            fileSize,
-            version,
-            versionLabel: `v${version}`,
-            uploadCount: 1,
-            status: status || 'LIVE',
-            timestamp: Date.now()
-        });
-    }
-
-    // Persist
-    try {
-        localStorage.setItem('rw_uploads', JSON.stringify(APP.uploadHistory.slice(0, 100)));
-    } catch(e) {}
-
-    // Send to server
-    fetch('/api/activity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'trackUpload', username: user.username, fileName, fileType, fileSize, version, status })
-    }).catch(() => {});
-}
-
-/* ═══════════════════════════════════════ ACTIVITY PAGE ═══════════════════════════════════════ */
-function renderActivityPage() {
-    // Load stored activity
-    if (APP.activityLog.length === 0) {
-        try {
-            APP.activityLog = JSON.parse(localStorage.getItem('rw_activity') || '[]');
-        } catch(e) {}
-    }
-    if (APP.uploadHistory.length === 0) {
-        try {
-            APP.uploadHistory = JSON.parse(localStorage.getItem('rw_uploads') || '[]');
-        } catch(e) {}
-    }
-
-    // Stats
-    const logins = APP.activityLog.filter(a => a.actionType === 'login').length;
-    const uploads = APP.activityLog.filter(a => a.actionType === 'file_upload').length;
-    const updates = APP.activityLog.filter(a => a.actionType === 'file_update').length;
-    const deletes = APP.activityLog.filter(a => a.actionType === 'file_delete').length;
-
-    animVal($('asTotal'), APP.activityLog.length);
-    animVal($('asLogins'), logins);
-    animVal($('asUploads'), uploads);
-    animVal($('asUpdates'), updates);
-    animVal($('asDeletes'), deletes);
-
-    // Populate user filter
-    const users = [...new Set(APP.activityLog.map(a => a.username))];
-    const userSelect = $('activityFilterUser');
-    if (userSelect) {
-        const current = userSelect.value;
-        userSelect.innerHTML = '<option value="all">All Users</option>' +
-            users.map(u => `<option value="${u}" ${u === current ? 'selected' : ''}>${u}</option>`).join('');
-    }
-
-    renderUploadHistoryTable();
-    renderActivityTimeline();
-}
-
-function renderUploadHistoryTable() {
-    const tbody = $('uploadHistoryBody');
-    const empty = $('noUploadHistory');
-    if (!tbody) return;
-
-    // Combine APP files + tracked uploads
-    let uploads = APP.files.map(f => ({
-        username: getCurrentUser().username,
-        displayName: getCurrentUser().displayName,
-        fileName: f.name,
-        fileType: f.type,
-        fileSize: f.size,
-        version: f.version,
-        versionLabel: `v${f.version}`,
-        uploadCount: f.version,
-        status: f.isLive ? 'LIVE' : 'STATIC',
-        timestamp: f.uploadedAt
-    }));
-
-    // Merge with tracked uploads
-    APP.uploadHistory.forEach(u => {
-        if (!uploads.find(up => up.fileName === u.fileName)) uploads.push(u);
-    });
-
-    uploads.sort((a, b) => b.timestamp - a.timestamp);
-
-    if (uploads.length === 0) {
-        tbody.innerHTML = '';
-        if (empty) empty.style.display = 'block';
-        return;
-    }
-
-    if (empty) empty.style.display = 'none';
-    tbody.innerHTML = uploads.map(u => {
-        const icon = getFileIcon(u.fileType);
-        const colorCls = getFileColor(u.fileType);
-        const initials = (u.displayName || u.username || 'AD').split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2);
-        const statusClass = u.status === 'LIVE' ? 'status-live' : 'status-static';
-        return `<tr>
-            <td><div class="uht-user"><div class="uht-user-avatar">${initials}</div>${escapeHtml(u.username)}</div></td>
-            <td><span class="file-icon ${colorCls}" style="width:28px;height:28px;border-radius:8px;font-size:.75rem"><i class="fa-solid ${icon}"></i></span> ${escapeHtml(u.fileName)}</td>
-            <td>${(u.fileType || '').toUpperCase()}</td>
-            <td>${fmtDate(u.timestamp)} ${fmtTime(u.timestamp)}</td>
-            <td><span class="fc-version">${u.versionLabel}</span></td>
-            <td>${u.uploadCount}×</td>
-            <td><span class="${statusClass}">${u.status === 'LIVE' ? '🟢 LIVE' : '⚪ STATIC'}</span></td>
-        </tr>`;
-    }).join('');
-}
-
-function renderActivityTimeline() {
-    const timeline = $('activityTimeline');
-    if (!timeline) return;
-
-    const userFilter = $('activityFilterUser')?.value || 'all';
-    const typeFilter = $('activityFilterType')?.value || 'all';
-    const searchQuery = ($('activitySearch')?.value || '').toLowerCase().trim();
-
-    let logs = [...APP.activityLog];
-
-    if (userFilter !== 'all') logs = logs.filter(l => l.username === userFilter);
-    if (typeFilter !== 'all') logs = logs.filter(l => l.actionType === typeFilter);
-    if (searchQuery) {
-        logs = logs.filter(l =>
-            (l.details && l.details.toLowerCase().includes(searchQuery)) ||
-            (l.fileName && l.fileName.toLowerCase().includes(searchQuery)) ||
-            (l.username && l.username.toLowerCase().includes(searchQuery))
-        );
-    }
-
-    logs.sort((a, b) => b.timestamp - a.timestamp);
-    logs = logs.slice(0, 100);
-
-    if (logs.length === 0) {
-        timeline.innerHTML = '<div class="empty-state"><i class="fa-solid fa-list-check"></i><h3>No matching activities</h3><p>Try adjusting your filters</p></div>';
-        return;
-    }
-
-    const actionConfig = {
-        login: { icon: 'fa-right-to-bracket', label: 'Login', cls: 'login' },
-        logout: { icon: 'fa-right-from-bracket', label: 'Logout', cls: 'login' },
-        file_upload: { icon: 'fa-cloud-arrow-up', label: 'File Upload', cls: 'upload' },
-        file_update: { icon: 'fa-rotate', label: 'File Update', cls: 'update' },
-        file_delete: { icon: 'fa-trash-can', label: 'File Deleted', cls: 'delete' },
-        file_view: { icon: 'fa-eye', label: 'File View', cls: 'view' },
-        navigation: { icon: 'fa-compass', label: 'Navigation', cls: 'system' },
-        system: { icon: 'fa-gear', label: 'System', cls: 'system' },
-        sheets_connect: { icon: 'fa-table', label: 'Sheets Connected', cls: 'upload' }
-    };
-
-    timeline.innerHTML = logs.map(l => {
-        const cfg = actionConfig[l.actionType] || { icon: 'fa-circle', label: l.actionType, cls: 'system' };
-        const time = new Date(l.timestamp);
-        const timeStr = fmtTimeAgo(l.timestamp);
-        const fullTime = `${fmtDate(l.timestamp)} at ${time.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}`;
-
-        let metaTags = '';
-        if (l.username) metaTags += `<span class="ai-meta-tag"><i class="fa-solid fa-user" style="font-size:.55rem"></i> ${escapeHtml(l.username)}</span>`;
-        if (l.fileName) metaTags += `<span class="ai-meta-tag"><i class="fa-solid fa-file" style="font-size:.55rem"></i> ${escapeHtml(l.fileName)}</span>`;
-        if (l.fileType) metaTags += `<span class="ai-meta-tag">${l.fileType.toUpperCase()}</span>`;
-
-        return `<div class="activity-item ${cfg.cls} glass">
-            <div class="ai-top">
-                <h4><span class="ai-action-icon ${cfg.cls}"><i class="fa-solid ${cfg.icon}"></i></span> ${cfg.label}</h4>
-                <span class="ai-time" title="${fullTime}">${timeStr}</span>
-            </div>
-            <div class="ai-detail">${escapeHtml(l.details || 'No details')}</div>
-            ${metaTags ? `<div class="ai-meta">${metaTags}</div>` : ''}
-        </div>`;
-    }).join('');
-}
-
-function refreshActivityData() {
-    toast('Refreshing activity data...', 'info');
-    renderActivityPage();
-    setTimeout(() => toast('Activity data refreshed', 'success'), 500);
-}
-
 /* ═══════════════════════════════════════ INITIALIZATION ═══════════════════════════════════════ */
-window.addEventListener('DOMContentLoaded', () => {
-    // Init admin dropdown
-    initAdminDropdown();
+window.addEventListener('DOMContentLoaded', async () => {
 
-    // Load persisted activity
-    try { APP.activityLog = JSON.parse(localStorage.getItem('rw_activity') || '[]'); } catch(e) {}
-    try { APP.uploadHistory = JSON.parse(localStorage.getItem('rw_uploads') || '[]'); } catch(e) {}
+    const authenticated = await validateAuth();
+    if (!authenticated) return; // Wait for redirect
+
+    // Profile dropdown logic
+    $('profileAvatar').addEventListener('click', (e) => {
+        e.stopPropagation();
+        $('profileDropdown').classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+        if ($('profileDropdown')) $('profileDropdown').classList.remove('open');
+    });
+
+    $('profileDropdown').addEventListener('click', (e) => e.stopPropagation());
 
     setTimeout(() => typeText($('heroTitle'), 'Railway Intelligence Platform Online.'), 400);
 
@@ -3318,6 +2905,7 @@ window.addEventListener('DOMContentLoaded', () => {
     updateUploadBadge();
     renderDashboard();
     renderUploadPage();
+    renderHistory();
 
     setTimeout(() => {
         $$('.skel').forEach(el => el.classList.remove('skel'));
@@ -3326,21 +2914,61 @@ window.addEventListener('DOMContentLoaded', () => {
     startLiveSync();
     setupWebSockets();
 
-    const user = getCurrentUser();
-    DebugLogger.log('info', `Railway Intelligence Platform v4.0 initialized — User: ${user.displayName}`);
+    DebugLogger.log('info', 'Railway Intelligence Platform v3.0 initialized');
     DebugLogger.log('info', `Cache TTL: ${DataPipeline.CACHE_TTL}ms | Max retries: 5 | Rate limit: ${RateLimiter.maxPerMinute}/min`);
 
-    logActivity('system', null, null, `Dashboard initialized by ${user.displayName}`);
-
-    setTimeout(() => toast(`Welcome, ${user.displayName}!`, 'success'), 800);
-    setTimeout(() => toast('Real-time data engine active — pipeline ready', 'info'), 2000);
+    setTimeout(() => toast('System matrices loaded successfully', 'success'), 1200);
+    setTimeout(() => toast('Real-time data engine active — pipeline ready', 'info'), 2500);
 });
+
+/* ═══════════════════════════════════════ COMPONENT RENDERING ═══════════════════════════════════════ */
+// Ensure we inject renderHistory globally
+function renderHistory() {
+    const tbody = $('historyTableBody');
+    const empty = $('noHistory');
+    const search = $('historySearch').value.toLowerCase();
+    
+    if (!tbody || !empty) return;
+
+    let filtered = APP.activities;
+    if (search) {
+        filtered = filtered.filter(a => 
+            a.user.toLowerCase().includes(search) || 
+            a.action.toLowerCase().includes(search) || 
+            a.target.toLowerCase().includes(search)
+        );
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+    } else {
+        empty.style.display = 'none';
+        tbody.innerHTML = filtered.map(a => `
+            <tr>
+                <td style="color:var(--txt3);font-size:0.8rem">${fmtDate(a.timestamp)} ${fmtTime(a.timestamp)}</td>
+                <td style="font-weight:600;color:var(--txt)">${escapeHtml(a.user)}</td>
+                <td>${escapeHtml(a.action)}</td>
+                <td><span class="status-badge st-synced">${escapeHtml(a.target)}</span></td>
+            </tr>
+        `).join('');
+    }
+}
+
+function clearHistory() {
+    if (confirm('Are you sure you want to clear the system activity log? This action cannot be undone.')) {
+        APP.activities = [];
+        localStorage.setItem('rw_activity', '[]');
+        renderHistory();
+        toast('Activity history cleared', 'success');
+        logActivity('system', 'Cleared activity log', 'System');
+    }
+}
 
 /* ═══════════════════════════════════════ KEYBOARD SHORTCUTS ═══════════════════════════════════════ */
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         closeModal();
-        closeAdminDropdown();
         $('notifPanel').classList.remove('open');
         $('searchResults').classList.remove('open');
         if ($('chatbot').classList.contains('open')) toggleChat();
