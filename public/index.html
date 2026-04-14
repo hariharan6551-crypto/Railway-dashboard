@@ -646,7 +646,7 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
                     </div>
 
                     <div class="files-grid" id="filesGrid"></div>
-                    <div class="empty-state" id="noUploadFiles">
+                    <div class="empty-state" id="noUploadFiles" style="display:none">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                         <h3>No files uploaded yet</h3>
                         <p>Drag & drop files above to begin intelligence processing</p>
@@ -1186,62 +1186,107 @@ function connectGoogleSheets() {
     $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
     $('connectSheetsBtn').disabled = true;
 
-    // Simulate connection + generate demo Sheets data
-    setTimeout(() => {
+    // Extract spreadsheet ID from URL
+    const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const spreadsheetId = idMatch ? idMatch[1] : null;
+
+    // Try fetching real data from published Google Sheet (CSV export)
+    const fetchRealData = spreadsheetId
+        ? fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=0`, { mode: 'cors' })
+            .then(r => { if (!r.ok) throw new Error('Not public'); return r.text(); })
+            .then(csv => {
+                // Parse CSV into 2D array
+                const rows = [];
+                const lines = csv.split('\n');
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    const cells = [];
+                    let inQuote = false, cell = '';
+                    for (let i = 0; i < line.length; i++) {
+                        const ch = line[i];
+                        if (ch === '"') { inQuote = !inQuote; }
+                        else if (ch === ',' && !inQuote) { cells.push(cell.trim()); cell = ''; }
+                        else { cell += ch; }
+                    }
+                    cells.push(cell.trim());
+                    rows.push(cells);
+                }
+                return rows;
+            })
+            .catch(() => null)
+        : Promise.resolve(null);
+
+    fetchRealData.then(realRows => {
         APP.sheetsConnected = true;
         APP.sheetsUrl = url;
         APP.sheetsLastSync = Date.now();
 
-        // Generate realistic railway spreadsheet data
-        const sheetsData = {
-            type: 'sheets',
-            sheetNames: ['Train Schedule', 'Revenue Data', 'Station Metrics'],
-            sheets: {
-                'Train Schedule': [
-                    ['Train No', 'Train Name', 'Origin', 'Destination', 'Departure', 'Arrival', 'Status', 'Platform'],
-                    ['12637', 'Pandian Express', 'Chennai', 'Madurai', '21:30', '05:55', 'On Time', '3'],
-                    ['12635', 'Vaigai Express', 'Chennai', 'Madurai', '12:15', '19:45', 'On Time', '5'],
-                    ['16127', 'Guruvayur Express', 'Chennai', 'Guruvayur', '23:00', '09:30', 'Delayed 15m', '1'],
-                    ['12631', 'Nellai Express', 'Chennai', 'Tirunelveli', '20:00', '05:00', 'On Time', '2'],
-                    ['16723', 'Ananthapuri Express', 'Chennai', 'Trivandrum', '14:50', '04:30', 'On Time', '7'],
-                    ['12661', 'Pothigai Express', 'Chennai', 'Tirunelveli', '21:15', '06:30', 'On Time', '4'],
-                    ['22207', 'Super AC Express', 'Chennai', 'Madurai', '06:00', '13:15', 'On Time', '6'],
-                    ['12633', 'Kanyakumari Express', 'Chennai', 'Kanyakumari', '17:30', '06:00', 'Delayed 5m', '8'],
-                ],
-                'Revenue Data': [
-                    ['Month', 'Passenger Revenue (₹L)', 'Freight Revenue (₹L)', 'Total Revenue (₹L)', 'Growth %'],
-                    ['January', '182.5', '94.3', '276.8', '+4.2%'],
-                    ['February', '195.2', '88.7', '283.9', '+2.6%'],
-                    ['March', '210.8', '102.1', '312.9', '+10.2%'],
-                    ['April', '198.4', '96.5', '294.9', '-5.8%'],
-                    ['May', '221.6', '108.3', '329.9', '+11.9%'],
-                    ['June', '234.1', '112.7', '346.8', '+5.1%'],
-                    ['July', '245.9', '118.4', '364.3', '+5.0%'],
-                    ['August', '252.3', '125.1', '377.4', '+3.6%'],
-                ],
-                'Station Metrics': [
-                    ['Station', 'Daily Footfall', 'On-Time %', 'Revenue (₹L/day)', 'Rating', 'AI Score'],
-                    ['Madurai Jn', '85000', '94.2%', '12.4', '4.6/5', '96.8'],
-                    ['Chennai Central', '142000', '91.8%', '28.7', '4.3/5', '93.2'],
-                    ['Coimbatore Jn', '68000', '95.1%', '9.8', '4.5/5', '95.5'],
-                    ['Trichy Jn', '56000', '93.4%', '7.2', '4.4/5', '94.1'],
-                    ['Salem Jn', '45000', '96.2%', '5.9', '4.7/5', '97.3'],
-                    ['Tirunelveli Jn', '32000', '97.1%', '4.1', '4.8/5', '98.1'],
-                ]
-            }
-        };
+        let sheetsData;
+
+        if (realRows && realRows.length > 0) {
+            // Use REAL data from the Google Sheet
+            const sheetName = 'Sheet1';
+            sheetsData = {
+                type: 'sheets',
+                sheetNames: [sheetName],
+                sheets: { [sheetName]: realRows }
+            };
+            toast('✓ Live data fetched from your Google Sheet!', 'success');
+        } else {
+            // Fallback: generate demo railway data
+            sheetsData = {
+                type: 'sheets',
+                sheetNames: ['Train Schedule', 'Revenue Data', 'Station Metrics'],
+                sheets: {
+                    'Train Schedule': [
+                        ['Train No', 'Train Name', 'Origin', 'Destination', 'Departure', 'Arrival', 'Status', 'Platform'],
+                        ['12637', 'Pandian Express', 'Chennai', 'Madurai', '21:30', '05:55', 'On Time', '3'],
+                        ['12635', 'Vaigai Express', 'Chennai', 'Madurai', '12:15', '19:45', 'On Time', '5'],
+                        ['16127', 'Guruvayur Express', 'Chennai', 'Guruvayur', '23:00', '09:30', 'Delayed 15m', '1'],
+                        ['12631', 'Nellai Express', 'Chennai', 'Tirunelveli', '20:00', '05:00', 'On Time', '2'],
+                        ['16723', 'Ananthapuri Express', 'Chennai', 'Trivandrum', '14:50', '04:30', 'On Time', '7'],
+                        ['12661', 'Pothigai Express', 'Chennai', 'Tirunelveli', '21:15', '06:30', 'On Time', '4'],
+                        ['22207', 'Super AC Express', 'Chennai', 'Madurai', '06:00', '13:15', 'On Time', '6'],
+                        ['12633', 'Kanyakumari Express', 'Chennai', 'Kanyakumari', '17:30', '06:00', 'Delayed 5m', '8'],
+                    ],
+                    'Revenue Data': [
+                        ['Month', 'Passenger Revenue (₹L)', 'Freight Revenue (₹L)', 'Total Revenue (₹L)', 'Growth %'],
+                        ['January', '182.5', '94.3', '276.8', '+4.2%'],
+                        ['February', '195.2', '88.7', '283.9', '+2.6%'],
+                        ['March', '210.8', '102.1', '312.9', '+10.2%'],
+                        ['April', '198.4', '96.5', '294.9', '-5.8%'],
+                        ['May', '221.6', '108.3', '329.9', '+11.9%'],
+                        ['June', '234.1', '112.7', '346.8', '+5.1%'],
+                        ['July', '245.9', '118.4', '364.3', '+5.0%'],
+                        ['August', '252.3', '125.1', '377.4', '+3.6%'],
+                    ],
+                    'Station Metrics': [
+                        ['Station', 'Daily Footfall', 'On-Time %', 'Revenue (₹L/day)', 'Rating', 'AI Score'],
+                        ['Madurai Jn', '85000', '94.2%', '12.4', '4.6/5', '96.8'],
+                        ['Chennai Central', '142000', '91.8%', '28.7', '4.3/5', '93.2'],
+                        ['Coimbatore Jn', '68000', '95.1%', '9.8', '4.5/5', '95.5'],
+                        ['Trichy Jn', '56000', '93.4%', '7.2', '4.4/5', '94.1'],
+                        ['Salem Jn', '45000', '96.2%', '5.9', '4.7/5', '97.3'],
+                        ['Tirunelveli Jn', '32000', '97.1%', '4.1', '4.8/5', '98.1'],
+                    ]
+                }
+            };
+            if (spreadsheetId) toast('Sheet is private — using demo data. Make it public to fetch live data.', 'warning');
+        }
 
         APP.sheetsData = sheetsData;
 
         // Add to files list
         const existingIdx = APP.files.findIndex(f => f.type === 'sheets');
+        const fileName = realRows ? 'Google Sheets — Live Data' : 'Google Sheets — Railway Data';
         if (existingIdx !== -1) {
             APP.files[existingIdx].data = sheetsData;
+            APP.files[existingIdx].name = fileName;
             APP.files[existingIdx].uploadedAt = Date.now();
             APP.files[existingIdx].version++;
         } else {
             APP.files.unshift({
-                id: uid(), name: 'Google Sheets — Railway Data', type: 'sheets',
+                id: uid(), name: fileName, type: 'sheets',
                 size: JSON.stringify(sheetsData).length,
                 uploadedAt: Date.now(), version: 1, data: sheetsData,
                 isLive: true
@@ -1262,9 +1307,17 @@ function connectGoogleSheets() {
         renderUploadPage();
         if (APP.page === 'dashboard') renderDashboard();
 
+        // Auto-scroll to show the file card
+        setTimeout(() => {
+            const grid = $('filesGrid');
+            if (grid && grid.firstChild) {
+                grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
+
         // Start polling simulation
         startSheetsPolling();
-    }, 1500);
+    });
 }
 
 function startSheetsPolling() {
@@ -1605,11 +1658,11 @@ function renderUploadPage() {
 
     if (files.length === 0) {
         grid.innerHTML = '';
-        empty.style.display = 'block';
+        if (empty) empty.style.display = 'block';
         return;
     }
 
-    empty.style.display = 'none';
+    if (empty) empty.style.display = 'none';
     grid.innerHTML = files.map(f => {
         const icon = getFileIcon(f.type);
         const colorCls = getFileColor(f.type);
