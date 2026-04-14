@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Railway AI — Secure Login</title>
+<meta name="description" content="Secure authentication portal for the Railway Intelligence Platform">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚄</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ═══════════════════ TOKENS ═══════════════════ */
+:root {
+    --p: #4facfe;
+    --p2: #00c6ff;
+    --p3: #0072ff;
+    --accent: #667eea;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --bg-start: #e0f2fe;
+    --bg-mid: #bae6fd;
+    --bg-end: #7dd3fc;
+    --card: rgba(255,255,255,0.25);
+    --card-border: rgba(255,255,255,0.45);
+    --txt: #0c1e3a;
+    --txt2: #3b5998;
+    --txt3: #7c9ac0;
+    --shadow: 0 25px 60px rgba(0,80,180,0.15);
+    --shadow-lg: 0 40px 80px rgba(0,80,180,0.2);
+    --r: 24px;
+}
+
+/* ═══════════════════ RESET ═══════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{min-height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+input,button{font-family:inherit;outline:none;border:none}
+a{text-decoration:none;color:inherit}
+
+/* ═══════════════════ ANIMATED BACKGROUND ═══════════════════ */
+.bg{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#e0f7fa 0%,#b2ebf2 20%,#80deea 40%,#4dd0e1 60%,#26c6da 80%,#00bcd4 100%);background-size:400% 400%;animation:gradientShift 12s ease infinite}
+@keyframes gradientShift{
+    0%{background-position:0% 50%}
+    25%{background-position:100% 0%}
+    50%{background-position:100% 100%}
+    75%{background-position:0% 100%}
+    100%{background-position:0% 50%}
+}
+
+/* Light rays */
+.bg::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,0.4) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(79,172,254,0.2) 0%,transparent 50%);animation:rayRotate 20s linear infinite;pointer-events:none}
+@keyframes rayRotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* Overlay mesh */
+.bg::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 30%,rgba(255,255,255,0.08) 100%);pointer-events:none}
+
+/* ═══════════════════ PARTICLES ═══════════════════ */
+.particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;background:rgba(255,255,255,0.6);animation:float linear infinite;pointer-events:none}
+.particle:nth-child(1){width:6px;height:6px;left:10%;animation-duration:18s;animation-delay:0s}
+.particle:nth-child(2){width:4px;height:4px;left:20%;animation-duration:22s;animation-delay:2s}
+.particle:nth-child(3){width:8px;height:8px;left:30%;animation-duration:16s;animation-delay:4s}
+.particle:nth-child(4){width:3px;height:3px;left:40%;animation-duration:24s;animation-delay:1s}
+.particle:nth-child(5){width:5px;height:5px;left:50%;animation-duration:20s;animation-delay:3s}
+.particle:nth-child(6){width:7px;height:7px;left:60%;animation-duration:17s;animation-delay:5s}
+.particle:nth-child(7){width:4px;height:4px;left:70%;animation-duration:21s;animation-delay:0.5s}
+.particle:nth-child(8){width:6px;height:6px;left:80%;animation-duration:19s;animation-delay:2.5s}
+.particle:nth-child(9){width:3px;height:3px;left:85%;animation-duration:23s;animation-delay:4.5s}
+.particle:nth-child(10){width:5px;height:5px;left:15%;animation-duration:25s;animation-delay:1.5s}
+.particle:nth-child(11){width:4px;height:4px;left:55%;animation-duration:15s;animation-delay:3.5s}
+.particle:nth-child(12){width:6px;height:6px;left:75%;animation-duration:26s;animation-delay:0.8s}
+@keyframes float{
+    0%{transform:translateY(110vh) scale(0);opacity:0}
+    10%{opacity:1}
+    90%{opacity:1}
+    100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* Floating orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(60px);opacity:0.25;pointer-events:none;z-index:1}
+.orb-1{width:400px;height:400px;background:var(--p);top:-100px;left:-100px;animation:orbDrift1 15s ease-in-out infinite alternate}
+.orb-2{width:350px;height:350px;background:var(--p2);bottom:-80px;right:-80px;animation:orbDrift2 18s ease-in-out infinite alternate}
+.orb-3{width:250px;height:250px;background:var(--accent);top:50%;left:50%;transform:translate(-50%,-50%);animation:orbDrift3 12s ease-in-out infinite alternate}
+@keyframes orbDrift1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(80px,60px) scale(1.1)}}
+@keyframes orbDrift2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-70px,-50px) scale(1.15)}}
+@keyframes orbDrift3{0%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-40%,-60%) scale(0.9)}}
+
+/* ═══════════════════ LOGIN CARD ═══════════════════ */
+.login-wrapper{position:relative;z-index:10;width:100%;max-width:460px;padding:20px;animation:cardEntrance 1.2s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes cardEntrance{
+    0%{opacity:0;transform:translateY(60px) scale(0.92);filter:blur(8px)}
+    100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+
+.login-card{background:rgba(255,255,255,0.28);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.5);border-radius:var(--r);padding:48px 40px 40px;box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,0.6),inset 0 -1px 0 rgba(255,255,255,0.1);animation:cardFloat 6s ease-in-out infinite;position:relative;overflow:hidden}
+@keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* Card shine effect */
+.login-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%);animation:cardShine 6s ease-in-out infinite;pointer-events:none}
+@keyframes cardShine{0%,100%{transform:translate(-30%,-30%) rotate(25deg)}50%{transform:translate(30%,30%) rotate(25deg)}}
+
+/* ═══════════════════ LOGO / HEADER ═══════════════════ */
+.login-header{text-align:center;margin-bottom:36px;position:relative}
+.logo-ring{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p3));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative;box-shadow:0 10px 30px rgba(79,172,254,0.35);animation:logoPulse 3s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{box-shadow:0 10px 30px rgba(79,172,254,0.35)}50%{box-shadow:0 15px 45px rgba(79,172,254,0.5),0 0 0 12px rgba(79,172,254,0.08)}}
+.logo-ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;border-top-color:rgba(255,255,255,0.6);animation:ringRotate 3s linear infinite}
+@keyframes ringRotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.logo-ring i{font-size:2rem;color:#fff}
+.login-header h1{font-size:1.6rem;font-weight:800;color:var(--txt);letter-spacing:-0.5px;margin-bottom:6px}
+.login-header h1 span{background:linear-gradient(135deg,var(--p),var(--p3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-header p{font-size:0.88rem;color:var(--txt3);font-weight:500}
+
+/* ═══════════════════ SECURE BADGE ═══════════════════ */
+.secure-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--success);font-size:0.72rem;font-weight:700;margin-top:12px;animation:badgeFadeIn 1s 0.8s ease both}
+@keyframes badgeFadeIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+.secure-badge i{font-size:0.65rem}
+.secure-badge .lock-anim{animation:lockBounce 2s ease-in-out infinite}
+@keyframes lockBounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-2px)}60%{transform:translateY(1px)}}
+
+/* ═══════════════════ FORM ═══════════════════ */
+.form-group{margin-bottom:20px;position:relative;animation:fieldSlideIn 0.8s cubic-bezier(0.16,1,0.3,1) both}
+.form-group:nth-child(1){animation-delay:0.3s}
+.form-group:nth-child(2){animation-delay:0.45s}
+@keyframes fieldSlideIn{0%{opacity:0;transform:translateX(-20px)}100%{opacity:1;transform:translateX(0)}}
+
+.form-label{display:block;font-size:0.82rem;font-weight:600;color:var(--txt2);margin-bottom:8px;letter-spacing:0.3px;transition:color 0.3s}
+.input-wrap{position:relative;display:flex;align-items:center}
+.input-icon{position:absolute;left:16px;color:var(--txt3);font-size:0.95rem;transition:all 0.3s;z-index:2}
+.form-input{width:100%;padding:15px 48px 15px 48px;border-radius:16px;border:2px solid rgba(79,172,254,0.15);background:rgba(255,255,255,0.5);color:var(--txt);font-size:0.95rem;font-weight:500;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.form-input::placeholder{color:var(--txt3);font-weight:400}
+
+/* Focus glow */
+.form-input:focus{border-color:var(--p);background:rgba(255,255,255,0.7);box-shadow:0 0 0 4px rgba(79,172,254,0.15),0 8px 25px rgba(79,172,254,0.12)}
+.form-input:focus ~ .input-icon,.input-wrap:focus-within .input-icon{color:var(--p);transform:scale(1.15)}
+.form-input:focus ~ .focus-line{transform:scaleX(1)}
+
+/* Focus underline */
+.focus-line{position:absolute;bottom:0;left:10%;width:80%;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);transform:scaleX(0);transition:transform 0.4s ease;border-radius:1px}
+
+/* Eye toggle */
+.eye-toggle{position:absolute;right:16px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1rem;padding:4px;z-index:2;transition:all 0.2s;border-radius:50%}
+.eye-toggle:hover{color:var(--p);transform:scale(1.15)}
+
+/* Shake animation for errors */
+.form-group.shake .form-input{animation:inputShake 0.5s ease;border-color:var(--danger) !important;box-shadow:0 0 0 4px rgba(239,68,68,0.12) !important}
+@keyframes inputShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
+.form-group.shake .input-icon{color:var(--danger) !important}
+
+/* Success state */
+.form-group.valid .form-input{border-color:var(--success);box-shadow:0 0 0 4px rgba(16,185,129,0.1)}
+.form-group.valid .input-icon{color:var(--success)}
+
+/* Error message */
+.error-msg{font-size:0.75rem;color:var(--danger);margin-top:6px;padding-left:4px;font-weight:500;opacity:0;height:0;transition:all 0.3s;overflow:hidden}
+.form-group.shake .error-msg{opacity:1;height:18px}
+
+/* ═══════════════════ PASSWORD STRENGTH ═══════════════════ */
+.strength-bar{height:4px;border-radius:2px;background:rgba(0,0,0,0.06);margin-top:10px;overflow:hidden;opacity:0;transition:opacity 0.3s}
+.strength-bar.visible{opacity:1}
+.strength-fill{height:100%;border-radius:2px;width:0;transition:width 0.5s cubic-bezier(0.4,0,0.2,1),background 0.5s}
+.strength-text{font-size:0.7rem;font-weight:600;margin-top:4px;text-align:right;opacity:0;transition:all 0.3s;height:0}
+.strength-text.visible{opacity:1;height:16px}
+
+/* ═══════════════════ OPTIONS ROW ═══════════════════ */
+.options-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;animation:fieldSlideIn 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both}
+
+/* Custom checkbox */
+.check-wrap{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;color:var(--txt2);font-weight:500;user-select:none}
+.check-wrap input{display:none}
+.checkmark{width:20px;height:20px;border-radius:7px;border:2px solid rgba(79,172,254,0.3);background:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;transition:all 0.3s;flex-shrink:0}
+.checkmark i{font-size:0.6rem;color:#fff;opacity:0;transform:scale(0);transition:all 0.3s cubic-bezier(0.175,0.885,0.32,1.275)}
+.check-wrap input:checked ~ .checkmark{background:linear-gradient(135deg,var(--p),var(--p3));border-color:var(--p);box-shadow:0 4px 12px rgba(79,172,254,0.3)}
+.check-wrap input:checked ~ .checkmark i{opacity:1;transform:scale(1)}
+
+.forgot-link{font-size:0.84rem;color:var(--p);font-weight:600;transition:all 0.2s;position:relative}
+.forgot-link:hover{color:var(--p3)}
+.forgot-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1.5px;background:var(--p3);transition:width 0.3s}
+.forgot-link:hover::after{width:100%}
+
+/* ═══════════════════ LOGIN BUTTON ═══════════════════ */
+.login-btn-wrap{animation:fieldSlideIn 0.8s 0.7s cubic-bezier(0.16,1,0.3,1) both}
+.login-btn{width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--p),var(--p3));color:#fff;font-size:1rem;font-weight:700;cursor:pointer;position:relative;overflow:hidden;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);box-shadow:0 8px 25px rgba(79,172,254,0.35);letter-spacing:0.5px}
+.login-btn:hover{transform:translateY(-3px);box-shadow:0 15px 35px rgba(79,172,254,0.45)}
+.login-btn:active{transform:translateY(-1px) scale(0.98)}
+
+/* Shimmer effect */
+.login-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);transition:left 0.5s}
+.login-btn:hover::before{left:100%}
+
+/* Ripple effect */
+.login-btn .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.4);transform:scale(0);animation:rippleEffect 0.6s ease-out;pointer-events:none}
+@keyframes rippleEffect{to{transform:scale(4);opacity:0}}
+
+/* Button states */
+.login-btn.loading{pointer-events:none;background:linear-gradient(135deg,var(--p),var(--p2))}
+.login-btn.loading .btn-text{opacity:0}
+.login-btn.loading .btn-spinner{opacity:1}
+.login-btn.success{background:linear-gradient(135deg,var(--success),#059669);box-shadow:0 12px 30px rgba(16,185,129,0.4)}
+.login-btn.success .btn-text{opacity:0}
+.login-btn.success .btn-check{opacity:1;transform:scale(1)}
+
+.btn-text{transition:opacity 0.3s;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s}
+.btn-spinner::after{content:'';width:24px;height:24px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-check{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.5);transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);font-size:1.4rem}
+
+/* ═══════════════════ FOOTER ═══════════════════ */
+.login-footer{text-align:center;margin-top:28px;animation:fieldSlideIn 0.8s 0.85s cubic-bezier(0.16,1,0.3,1) both}
+.login-footer p{font-size:0.82rem;color:var(--txt3);font-weight:500}
+.login-footer a{color:var(--p);font-weight:700;transition:color 0.2s}
+.login-footer a:hover{color:var(--p3)}
+
+/* Divider */
+.divider{display:flex;align-items:center;gap:16px;margin:24px 0;animation:fieldSlideIn 0.8s 0.75s cubic-bezier(0.16,1,0.3,1) both}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(79,172,254,0.2),transparent)}
+.divider span{font-size:0.75rem;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+
+/* ═══════════════════ SSO BUTTONS ═══════════════════ */
+.sso-row{display:flex;gap:12px;animation:fieldSlideIn 0.8s 0.8s cubic-bezier(0.16,1,0.3,1) both}
+.sso-btn{flex:1;padding:13px;border-radius:14px;border:2px solid rgba(79,172,254,0.12);background:rgba(255,255,255,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:0.85rem;font-weight:600;color:var(--txt2);transition:all 0.3s}
+.sso-btn:hover{border-color:var(--p);background:rgba(255,255,255,0.6);transform:translateY(-2px);box-shadow:0 8px 20px rgba(79,172,254,0.12)}
+.sso-btn i{font-size:1.1rem}
+
+/* ═══════════════════ SUCCESS OVERLAY ═══════════════════ */
+.success-overlay{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,0);display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:all 0.8s ease}
+.success-overlay.active{opacity:1;pointer-events:all;background:rgba(255,255,255,0.95)}
+.success-content{text-align:center;transform:scale(0.8);opacity:0;transition:all 0.6s 0.3s cubic-bezier(0.16,1,0.3,1)}
+.success-overlay.active .success-content{transform:scale(1);opacity:1}
+.success-icon{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--success),#059669);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 15px 40px rgba(16,185,129,0.35);animation:successPulse 1.5s ease-in-out infinite}
+@keyframes successPulse{0%,100%{box-shadow:0 15px 40px rgba(16,185,129,0.35)}50%{box-shadow:0 20px 50px rgba(16,185,129,0.5),0 0 0 16px rgba(16,185,129,0.06)}}
+.success-icon i{font-size:2.5rem;color:#fff}
+.success-content h2{font-size:1.5rem;font-weight:800;color:var(--txt);margin-bottom:8px}
+.success-content p{font-size:0.95rem;color:var(--txt3);font-weight:500}
+.redirect-bar{width:200px;height:4px;border-radius:2px;background:rgba(0,0,0,0.06);margin:20px auto 0;overflow:hidden}
+.redirect-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--success),#059669);width:0;transition:width 2s linear}
+
+/* ═══════════════════ TOAST ═══════════════════ */
+.toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px}
+.toast{padding:14px 22px;border-radius:14px;font-weight:500;font-size:0.88rem;display:flex;align-items:center;gap:10px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:toastIn 0.5s cubic-bezier(0.16,1,0.3,1);box-shadow:0 10px 30px rgba(0,0,0,0.1)}
+.toast.error{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.2)}
+.toast.success{background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.2)}
+.toast.hide{animation:toastOut 0.4s ease forwards}
+@keyframes toastIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{to{transform:translateX(120%);opacity:0}}
+
+/* ═══════════════════ RESPONSIVE ═══════════════════ */
+@media(max-width:520px){
+    .login-card{padding:36px 24px 32px;border-radius:20px}
+    .login-header h1{font-size:1.35rem}
+    .logo-ring{width:68px;height:68px}
+    .logo-ring i{font-size:1.6rem}
+    .sso-row{flex-direction:column}
+    .login-wrapper{padding:16px}
+}
+@media(max-width:360px){
+    .login-card{padding:28px 18px 24px}
+    .form-input{padding:13px 44px 13px 44px;font-size:0.9rem}
+}
+
+/* ═══════════════════ CORNER BRANDING ═══════════════════ */
+.corner-brand{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;font-size:0.75rem;color:rgba(255,255,255,0.6);font-weight:500;letter-spacing:0.3px;text-align:center;animation:fadeBrandIn 1s 1.5s ease both}
+@keyframes fadeBrandIn{from{opacity:0}to{opacity:1}}
+.corner-brand i{margin-right:4px}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Particles -->
+<div class="particles">
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Success Overlay -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-content">
+        <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+        <h2>Authentication Successful</h2>
+        <p>Redirecting to Intelligence Dashboard...</p>
+        <div class="redirect-bar"><div class="redirect-fill" id="redirectFill"></div></div>
+    </div>
+</div>
+
+<!-- Login Card -->
+<div class="login-wrapper">
+    <div class="login-card">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-ring"><i class="fa-solid fa-train-subway"></i></div>
+            <h1>Railway <span>AI</span> System</h1>
+            <p>Secure Intelligence Portal</p>
+            <div class="secure-badge">
+                <i class="fa-solid fa-lock lock-anim"></i>
+                <span>256-bit Encrypted Connection</span>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form id="loginForm" autocomplete="off" onsubmit="return false">
+            <!-- Username -->
+            <div class="form-group" id="usernameGroup">
+                <label class="form-label">Username or Email</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input type="text" class="form-input" id="username" placeholder="Enter your username" autocomplete="username">
+                    <div class="focus-line"></div>
+                </div>
+                <div class="error-msg" id="usernameError">Please enter a valid username</div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group" id="passwordGroup">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" class="form-input" id="password" placeholder="Enter your password" autocomplete="current-password">
+                    <button type="button" class="eye-toggle" id="eyeToggle" aria-label="Toggle password visibility">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <div class="focus-line"></div>
+                </div>
+                <div class="strength-bar" id="strengthBar"><div class="strength-fill" id="strengthFill"></div></div>
+                <div class="strength-text" id="strengthText"></div>
+                <div class="error-msg" id="passwordError">Password must be at least 6 characters</div>
+            </div>
+
+            <!-- Options -->
+            <div class="options-row">
+                <label class="check-wrap">
+                    <input type="checkbox" id="rememberMe" checked>
+                    <span class="checkmark"><i class="fa-solid fa-check"></i></span>
+                    Remember me
+                </label>
+                <a href="#" class="forgot-link" onclick="toast('Password reset email sent!','success')">Forgot password?</a>
+            </div>
+
+            <!-- Login Button -->
+            <div class="login-btn-wrap">
+                <button type="submit" class="login-btn" id="loginBtn" onclick="handleLogin()">
+                    <span class="btn-text"><i class="fa-solid fa-right-to-bracket"></i> Sign In</span>
+                    <span class="btn-spinner"></span>
+                    <span class="btn-check"><i class="fa-solid fa-check"></i></span>
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider"><span>or continue with</span></div>
+
+            <!-- SSO -->
+            <div class="sso-row">
+                <button type="button" class="sso-btn" onclick="toast('SSO authentication initiated','success')">
+                    <i class="fa-brands fa-microsoft"></i> Microsoft
+                </button>
+                <button type="button" class="sso-btn" onclick="toast('SSO authentication initiated','success')">
+                    <i class="fa-brands fa-google"></i> Google
+                </button>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>Don't have an account? <a href="#">Request Access</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Corner brand -->
+<div class="corner-brand">
+    <i class="fa-solid fa-shield-halved"></i> Railway Intelligence Division — Southern Railway &copy; 2026
+</div>
+
+<script>
+/* ═══════════════════ UTILITIES ═══════════════════ */
+const $ = id => document.getElementById(id);
+
+function toast(msg, type = 'success') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icons = { success: 'fa-circle-check', error: 'fa-triangle-exclamation' };
+    t.innerHTML = `<i class="fa-solid ${icons[type] || icons.success}"></i> ${msg}`;
+    $('toasts').appendChild(t);
+    setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 500); }, 4000);
+}
+
+/* ═══════════════════ PASSWORD TOGGLE ═══════════════════ */
+$('eyeToggle').addEventListener('click', function() {
+    const pwd = $('password');
+    const icon = this.querySelector('i');
+    if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        pwd.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+});
+
+/* ═══════════════════ PASSWORD STRENGTH ═══════════════════ */
+$('password').addEventListener('input', function() {
+    const val = this.value;
+    const bar = $('strengthBar');
+    const fill = $('strengthFill');
+    const text = $('strengthText');
+
+    if (val.length === 0) {
+        bar.classList.remove('visible');
+        text.classList.remove('visible');
+        return;
+    }
+
+    bar.classList.add('visible');
+    text.classList.add('visible');
+
+    let score = 0;
+    if (val.length >= 6) score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = [
+        { w: '20%', c: '#ef4444', t: 'Very Weak', tc: '#ef4444' },
+        { w: '40%', c: '#f59e0b', t: 'Weak', tc: '#f59e0b' },
+        { w: '60%', c: '#eab308', t: 'Fair', tc: '#eab308' },
+        { w: '80%', c: '#22c55e', t: 'Strong', tc: '#22c55e' },
+        { w: '100%', c: '#10b981', t: 'Very Strong', tc: '#10b981' }
+    ];
+    const level = levels[Math.min(score, levels.length) - 1] || levels[0];
+    fill.style.width = level.w;
+    fill.style.background = level.c;
+    text.textContent = level.t;
+    text.style.color = level.tc;
+});
+
+/* ═══════════════════ INPUT VALIDATION ═══════════════════ */
+function validateField(id, groupId, minLen = 1) {
+    const val = $(id).value.trim();
+    const group = $(groupId);
+    group.classList.remove('shake', 'valid');
+
+    if (val.length < minLen) {
+        group.classList.add('shake');
+        setTimeout(() => group.classList.remove('shake'), 800);
+        return false;
+    }
+    group.classList.add('valid');
+    return true;
+}
+
+/* ═══════════════════ RIPPLE EFFECT ═══════════════════ */
+$('loginBtn').addEventListener('mousedown', function(e) {
+    const rect = this.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    this.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+});
+
+/* ═══════════════════ LOGIN HANDLER ═══════════════════ */
+function handleLogin() {
+    const btn = $('loginBtn');
+    if (btn.classList.contains('loading') || btn.classList.contains('success')) return;
+
+    const userValid = validateField('username', 'usernameGroup', 3);
+    const passValid = validateField('password', 'passwordGroup', 6);
+
+    if (!userValid || !passValid) {
+        toast('Please fill in all fields correctly', 'error');
+        return;
+    }
+
+    // Loading state
+    btn.classList.add('loading');
+    toast('Authenticating...', 'success');
+
+    // Simulate auth
+    setTimeout(() => {
+        btn.classList.remove('loading');
+        btn.classList.add('success');
+        toast('Authentication successful!', 'success');
+
+        // Show success overlay
+        setTimeout(() => {
+            $('successOverlay').classList.add('active');
+            setTimeout(() => {
+                $('redirectFill').style.width = '100%';
+            }, 100);
+
+            // Redirect to dashboard
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2400);
+        }, 600);
+    }, 2000);
+}
+
+/* ═══════════════════ ENTER KEY ═══════════════════ */
+$('loginForm').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLogin();
+    }
+});
+
+/* ═══════════════════ FOCUS ANIMATIONS ═══════════════════ */
+document.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.closest('.form-group').classList.remove('shake');
+    });
+    input.addEventListener('blur', function() {
+        if (this.value.trim().length > 0) {
+            this.closest('.form-group').classList.add('valid');
+        } else {
+            this.closest('.form-group').classList.remove('valid');
+        }
+    });
+});
+</script>
+</body>
+</html>
