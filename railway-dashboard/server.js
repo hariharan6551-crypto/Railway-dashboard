@@ -17,6 +17,15 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+// Serve static frontend files exactly like Vercel does
+app.use(express.static(path.join(__dirname, "../public")));
+
+// Mount Vercel Serverless Functions for local development
+app.all("/api/auth", require("../api/auth"));
+app.all("/api/sheets-proxy", require("../api/sheets-proxy"));
+app.all("/api/sheets-webhook", require("../api/sheets-webhook"));
+app.all("/api/upload", require("../api/upload"));
+
 // Storage config
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {

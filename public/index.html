@@ -1041,12 +1041,36 @@ async function validateAuth() {
 
     try {
         APP.user = JSON.parse(userStr);
-        // Setup UI with user details
-        const initials = (APP.user.displayName || APP.user.username).substring(0, 2).toUpperCase();
-        $('userAvatarImg').src = `https://ui-avatars.com/api/?name=${initials}&background=3b82f6&color=fff&bold=true`;
-        $('pdUserName').textContent = APP.user.displayName || APP.user.username;
-        $('pdUserRole').textContent = APP.user.role;
+    } catch (e) {
+        // Corrupt user data — clear and redirect
+        localStorage.removeItem('rw_token');
+        localStorage.removeItem('rw_user');
+        window.location.href = 'login.html';
+        return false;
+    }
 
+    // Validate user object has required fields
+    if (!APP.user || !APP.user.username) {
+        localStorage.removeItem('rw_token');
+        localStorage.removeItem('rw_user');
+        window.location.href = 'login.html';
+        return false;
+    }
+
+    // Setup UI with user details
+    const initials = (APP.user.displayName || APP.user.username).substring(0, 2).toUpperCase();
+    $('userAvatarImg').src = `https://ui-avatars.com/api/?name=${initials}&background=3b82f6&color=fff&bold=true`;
+    $('pdUserName').textContent = APP.user.displayName || APP.user.username;
+    $('pdUserRole').textContent = APP.user.role || 'user';
+
+    // If this is a local/frontend-only session, trust it directly
+    // (Frontend login creates tokens prefixed with 'local_session_token_')
+    if (token.startsWith('local_session_token_')) {
+        return true;
+    }
+
+    // For server-issued tokens, attempt API validation (non-blocking on failure)
+    try {
         const res = await fetch('/api/auth?action=validate', {
             method: 'GET',
             headers: { 'X-Session-Token': token }
@@ -1054,14 +1078,17 @@ async function validateAuth() {
         const data = await res.json();
         
         if (!res.ok || !data.valid) {
-            throw new Error('Session invalid');
+            // Server token expired/invalid — clear and redirect
+            localStorage.removeItem('rw_token');
+            localStorage.removeItem('rw_user');
+            window.location.href = 'login.html';
+            return false;
         }
         return true;
     } catch (e) {
-        localStorage.removeItem('rw_token');
-        localStorage.removeItem('rw_user');
-        window.location.href = 'login.html';
-        return false;
+        // API unreachable — trust local auth data (graceful degradation)
+        console.warn('[Auth] API validation unreachable, using local session:', e.message);
+        return true;
     }
 }
 
