@@ -2,8 +2,18 @@ const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -31,7 +41,29 @@ app.post("/upload", upload.single("file"), (req, res) => {
     });
 });
 
+// Webhook endpoint for Google Sheets Apps Script integration
+app.post("/sheet-update", (req, res) => {
+    console.log("Received Google Sheets update:", req.body);
+    
+    // Broadcast the update to all connected frontend clients
+    io.emit("sheet_updated", {
+        timestamp: Date.now(),
+        data: req.body
+    });
+    
+    res.status(200).json({ message: "Update received and broadcasted" });
+});
+
+// WebSocket connections
+io.on("connection", (socket) => {
+    console.log("New client connected:", socket.id);
+    
+    socket.on("disconnect", () => {
+        console.log("Client disconnected:", socket.id);
+    });
+});
+
 // Server start
-app.listen(5000, () => {
+server.listen(5000, () => {
     console.log("Server running on http://localhost:5000");
 });

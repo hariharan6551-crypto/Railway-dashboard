@@ -12,6 +12,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
     <style>
 /* ═══════════════════════════════════════ DESIGN TOKENS ═══════════════════════════════════════ */
 :root {
@@ -809,6 +810,9 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
    ═══════════════════════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════ STATE ═══════════════════════════════════════ */
+// TODO: Put your actual Google Sheets API Key here to enable fetching.
+const GOOGLE_SHEETS_API_KEY = 'YOUR_API_KEY_HERE';
+
 const APP = {
     files: [],
     fileMeta: JSON.parse(localStorage.getItem('rw_meta') || '[]'),
@@ -1175,7 +1179,7 @@ function updateUploadBadge() {
 }
 
 /* ═══════════════════════════════════════ GOOGLE SHEETS INTEGRATION ═══════════════════════════════════════ */
-function connectGoogleSheets() {
+async function connectGoogleSheets() {
     const url = $('sheetsUrl').value.trim();
     if (!url) {
         toast('Please enter a Google Sheets URL', 'error');
@@ -1190,116 +1194,47 @@ function connectGoogleSheets() {
     const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     const spreadsheetId = idMatch ? idMatch[1] : null;
 
-    // Try fetching real data from published Google Sheet (CSV export)
-    const fetchRealData = spreadsheetId
-        ? fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=0`, { mode: 'cors' })
-            .then(r => { if (!r.ok) throw new Error('Not public'); return r.text(); })
-            .then(csv => {
-                // Parse CSV into 2D array
-                const rows = [];
-                const lines = csv.split('\n');
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    const cells = [];
-                    let inQuote = false, cell = '';
-                    for (let i = 0; i < line.length; i++) {
-                        const ch = line[i];
-                        if (ch === '"') { inQuote = !inQuote; }
-                        else if (ch === ',' && !inQuote) { cells.push(cell.trim()); cell = ''; }
-                        else { cell += ch; }
-                    }
-                    cells.push(cell.trim());
-                    rows.push(cells);
-                }
-                return rows;
-            })
-            .catch(() => null)
-        : Promise.resolve(null);
+    if (!spreadsheetId) {
+        toast('Invalid Google Sheets URL', 'error');
+        $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-link"></i> Connect';
+        $('connectSheetsBtn').disabled = false;
+        return;
+    }
 
-    fetchRealData.then(realRows => {
+    try {
+        const data = await fetchGoogleSheetData(spreadsheetId);
+        
         APP.sheetsConnected = true;
         APP.sheetsUrl = url;
         APP.sheetsLastSync = Date.now();
-
-        let sheetsData;
-
-        if (realRows && realRows.length > 0) {
-            // Use REAL data from the Google Sheet
-            const sheetName = 'Sheet1';
-            sheetsData = {
-                type: 'sheets',
-                sheetNames: [sheetName],
-                sheets: { [sheetName]: realRows }
-            };
-            toast('✓ Live data fetched from your Google Sheet!', 'success');
-        } else {
-            // Fallback: generate demo railway data
-            sheetsData = {
-                type: 'sheets',
-                sheetNames: ['Train Schedule', 'Revenue Data', 'Station Metrics'],
-                sheets: {
-                    'Train Schedule': [
-                        ['Train No', 'Train Name', 'Origin', 'Destination', 'Departure', 'Arrival', 'Status', 'Platform'],
-                        ['12637', 'Pandian Express', 'Chennai', 'Madurai', '21:30', '05:55', 'On Time', '3'],
-                        ['12635', 'Vaigai Express', 'Chennai', 'Madurai', '12:15', '19:45', 'On Time', '5'],
-                        ['16127', 'Guruvayur Express', 'Chennai', 'Guruvayur', '23:00', '09:30', 'Delayed 15m', '1'],
-                        ['12631', 'Nellai Express', 'Chennai', 'Tirunelveli', '20:00', '05:00', 'On Time', '2'],
-                        ['16723', 'Ananthapuri Express', 'Chennai', 'Trivandrum', '14:50', '04:30', 'On Time', '7'],
-                        ['12661', 'Pothigai Express', 'Chennai', 'Tirunelveli', '21:15', '06:30', 'On Time', '4'],
-                        ['22207', 'Super AC Express', 'Chennai', 'Madurai', '06:00', '13:15', 'On Time', '6'],
-                        ['12633', 'Kanyakumari Express', 'Chennai', 'Kanyakumari', '17:30', '06:00', 'Delayed 5m', '8'],
-                    ],
-                    'Revenue Data': [
-                        ['Month', 'Passenger Revenue (₹L)', 'Freight Revenue (₹L)', 'Total Revenue (₹L)', 'Growth %'],
-                        ['January', '182.5', '94.3', '276.8', '+4.2%'],
-                        ['February', '195.2', '88.7', '283.9', '+2.6%'],
-                        ['March', '210.8', '102.1', '312.9', '+10.2%'],
-                        ['April', '198.4', '96.5', '294.9', '-5.8%'],
-                        ['May', '221.6', '108.3', '329.9', '+11.9%'],
-                        ['June', '234.1', '112.7', '346.8', '+5.1%'],
-                        ['July', '245.9', '118.4', '364.3', '+5.0%'],
-                        ['August', '252.3', '125.1', '377.4', '+3.6%'],
-                    ],
-                    'Station Metrics': [
-                        ['Station', 'Daily Footfall', 'On-Time %', 'Revenue (₹L/day)', 'Rating', 'AI Score'],
-                        ['Madurai Jn', '85000', '94.2%', '12.4', '4.6/5', '96.8'],
-                        ['Chennai Central', '142000', '91.8%', '28.7', '4.3/5', '93.2'],
-                        ['Coimbatore Jn', '68000', '95.1%', '9.8', '4.5/5', '95.5'],
-                        ['Trichy Jn', '56000', '93.4%', '7.2', '4.4/5', '94.1'],
-                        ['Salem Jn', '45000', '96.2%', '5.9', '4.7/5', '97.3'],
-                        ['Tirunelveli Jn', '32000', '97.1%', '4.1', '4.8/5', '98.1'],
-                    ]
-                }
-            };
-            if (spreadsheetId) toast('Sheet is private — using demo data. Make it public to fetch live data.', 'warning');
-        }
-
-        APP.sheetsData = sheetsData;
+        APP.sheetsData = data;
 
         // Add to files list
         const existingIdx = APP.files.findIndex(f => f.type === 'sheets');
-        const fileName = realRows ? 'Google Sheets — Live Data' : 'Google Sheets — Railway Data';
+        const fileName = 'Google Sheets — Live Data';
+        
         if (existingIdx !== -1) {
-            APP.files[existingIdx].data = sheetsData;
+            APP.files[existingIdx].data = data;
             APP.files[existingIdx].name = fileName;
             APP.files[existingIdx].uploadedAt = Date.now();
             APP.files[existingIdx].version++;
         } else {
             APP.files.unshift({
                 id: uid(), name: fileName, type: 'sheets',
-                size: JSON.stringify(sheetsData).length,
-                uploadedAt: Date.now(), version: 1, data: sheetsData,
-                isLive: true
+                size: JSON.stringify(data).length,
+                uploadedAt: Date.now(), version: 1, data: data,
+                isLive: true,
+                sheetId: spreadsheetId
             });
         }
 
         $('sheetsStatusBadge').style.display = 'inline-flex';
         $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-check"></i> Connected';
         $('connectSheetsBtn').disabled = false;
-        $('sheetsInfo').innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--s)"></i> Connected — Polling every 5s · Last sync: <span id="sheetsLastSyncTime">${fmtTime(Date.now())}</span>`;
+        $('sheetsInfo').innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--s)"></i> Connected — Polling & WebSockets active · Last sync: <span id="sheetsLastSyncTime">${fmtTime(Date.now())}</span>`;
 
         toast('✓ Google Sheets connected! Real-time sync active.', 'success');
-        addNotification('Google Sheets Connected', 'Real-time data pipeline established. Polling every 5 seconds.');
+        addNotification('Google Sheets Connected', 'Real-time data pipeline established.');
         broadcastChange('sheets_connected', 'Google Sheets');
 
         saveMeta();
@@ -1316,56 +1251,83 @@ function connectGoogleSheets() {
         }, 300);
 
         // Start polling simulation
-        startSheetsPolling();
-    });
+        startSheetsPolling(spreadsheetId);
+
+    } catch (err) {
+        toast(`Error connecting to sheet: ${err.message}`, 'error');
+        $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-link"></i> Connect';
+        $('connectSheetsBtn').disabled = false;
+    }
 }
 
-function startSheetsPolling() {
+async function fetchGoogleSheetData(sheetId) {
+    if(GOOGLE_SHEETS_API_KEY === "YOUR_API_KEY_HERE") {
+        throw new Error("Missing Google Sheets API Key. Please configure GOOGLE_SHEETS_API_KEY at the top of the script.");
+    }
+    
+    // 1. Fetch metadata to get sheet names
+    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${GOOGLE_SHEETS_API_KEY}`;
+    const metaRes = await fetch(metaUrl);
+    if (!metaRes.ok) throw new Error('Failed to fetch sheet metadata. Please check if the API key is correct and the sheet is public.');
+    const metaData = await metaRes.json();
+    
+    const sheetNames = metaData.sheets.map(s => s.properties.title);
+    const sheetsData = { type: 'sheets', sheetNames: sheetNames, sheets: {} };
+    
+    // 2. Fetch data for each sheet
+    for (const name of sheetNames) {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(name)}?key=${GOOGLE_SHEETS_API_KEY}`;
+        const res = await fetch(url);
+        if (res.ok) {
+            const json = await res.json();
+            sheetsData.sheets[name] = json.values || [];
+        } else {
+            sheetsData.sheets[name] = [];
+        }
+    }
+    
+    return sheetsData;
+}
+
+function startSheetsPolling(spreadsheetId) {
     if (APP.sheetsPollInterval) clearInterval(APP.sheetsPollInterval);
 
-    APP.sheetsPollInterval = setInterval(() => {
+    APP.sheetsPollInterval = setInterval(async () => {
         if (!APP.sheetsConnected || !APP.sheetsData) return;
 
-        // Simulate small data changes
-        const sheets = APP.sheetsData.sheets;
-        const scheduleSheet = sheets['Train Schedule'];
-        if (scheduleSheet && scheduleSheet.length > 2) {
-            // Randomly update a status
-            const randRow = 1 + Math.floor(Math.random() * (scheduleSheet.length - 1));
-            const statuses = ['On Time', 'On Time', 'On Time', 'Delayed 5m', 'Delayed 10m', 'On Time'];
-            const oldStatus = scheduleSheet[randRow][6];
-            const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
-            if (oldStatus !== newStatus) {
-                scheduleSheet[randRow][6] = newStatus;
-                APP.sheetsLastSync = Date.now();
+        try {
+            const newData = await fetchGoogleSheetData(spreadsheetId);
+            APP.sheetsData = newData;
+            APP.sheetsLastSync = Date.now();
 
-                // Update timestamp display
-                const tsEl = $('sheetsLastSyncTime');
-                if (tsEl) tsEl.textContent = fmtTime(Date.now());
-
-                // Notify about change
-                if (newStatus.includes('Delayed')) {
-                    addNotification('Train Status Update', `${scheduleSheet[randRow][1]} (${scheduleSheet[randRow][0]}) — ${newStatus}`);
-                }
-
-                // If modal is open showing sheets, refresh
-                if (APP.currentFile && APP.currentFile.type === 'sheets') {
-                    highlightChangedCell(randRow, 6);
-                }
-
-                // Update sync status
-                $('syncStatus').textContent = `Last sync: ${fmtTimeAgo(Date.now())}`;
-                broadcastChange('sheets_updated', 'Train schedule data changed');
+            const existingIdx = APP.files.findIndex(f => f.type === 'sheets');
+            if (existingIdx !== -1) {
+                APP.files[existingIdx].data = newData;
+                APP.files[existingIdx].uploadedAt = Date.now();
             }
-        }
 
-        // Revenue data slight variations
-        const revenueSheet = sheets['Revenue Data'];
-        if (revenueSheet && revenueSheet.length > 2) {
-            const lastRow = revenueSheet.length - 1;
-            const oldVal = parseFloat(revenueSheet[lastRow][3]) || 377;
-            const delta = (Math.random() - 0.4) * 2;
-            revenueSheet[lastRow][3] = (oldVal + delta).toFixed(1);
+            // Update timestamp display
+            const tsEl = $('sheetsLastSyncTime');
+            if (tsEl) tsEl.textContent = fmtTime(Date.now());
+
+            // If modal is open showing sheets, refresh
+            if (APP.currentFile && APP.currentFile.type === 'sheets') {
+                const activeTab = document.querySelector('.modal-tab.active');
+                const activeIdx = activeTab && APP.currentFile.data.sheetNames ? parseInt(activeTab.dataset.sheetIdx) : 0;
+                const activeName = newData.sheetNames[activeIdx];
+                if (activeName && document.activeElement && document.activeElement.tagName === 'TD' && document.activeElement.isContentEditable) {
+                    // Do not fully re-render to avoid losing focus if user is editing directly in the UI.
+                } else {
+                    renderSheet(newData.sheets[activeName], activeName, true);
+                }
+            }
+
+            // Update sync status
+            const statusEl = $('syncStatus');
+            if(statusEl) statusEl.textContent = `Last sync: ${fmtTimeAgo(Date.now())}`;
+            
+        } catch (err) {
+            console.error('Polling error:', err);
         }
     }, 5000);
 }
@@ -1385,33 +1347,66 @@ function highlightChangedCell(row, col) {
     }
 }
 
-/* ═══════════════════════════════════════ WEBSOCKET SIMULATION ═══════════════════════════════════════ */
-function broadcastChange(type, detail) {
-    // Simulate WebSocket broadcast to all connected clients
-    const event = { type, detail, timestamp: Date.now(), userId: 'Admin' };
+/* ═══════════════════════════════════════ WEBSOCKET ENGINE ═══════════════════════════════════════ */
+let socket;
+function setupWebSockets() {
+    try {
+        if (typeof io !== 'undefined') {
+            socket = io("http://localhost:5000");
 
-    // Update sync status
-    $('syncStatus').textContent = `Last sync: just now`;
+            socket.on("connect", () => {
+                APP.wsConnected = true;
+                updateSyncUI(true);
+            });
 
-    // Simulate other "users" seeing the update
-    const users = ['Suresh', 'Rajesh', 'Priya'];
-    if (Math.random() > 0.7) {
-        const user = users[Math.floor(Math.random() * users.length)];
-        setTimeout(() => {
-            addNotification(`${user} is viewing`, `${detail} — Live collaboration active`);
-        }, 1000 + Math.random() * 2000);
+            socket.on("disconnect", () => {
+                APP.wsConnected = false;
+                updateSyncUI(false);
+                toast('WebSocket disconnected', 'warning');
+            });
+
+            // True real-time update push mechanism via backend webhook
+            socket.on("sheet_updated", async (event) => {
+                console.log("Real-time webhook update received from server:", event);
+                addNotification('Real-Time App Update', 'Google Sheets changed. Refreshing data live via Webhook!');
+                
+                const sheetFile = APP.files.find(f => f.type === 'sheets');
+                if (sheetFile && sheetFile.sheetId) {
+                    try {
+                        const newData = await fetchGoogleSheetData(sheetFile.sheetId);
+                        APP.sheetsData = newData;
+                        APP.sheetsLastSync = Date.now();
+                        sheetFile.data = newData;
+                        sheetFile.uploadedAt = Date.now();
+
+                        const tsEl = $('sheetsLastSyncTime');
+                        if (tsEl) tsEl.textContent = fmtTime(Date.now());
+                        
+                        if (APP.currentFile && APP.currentFile.type === 'sheets') {
+                            const activeTab = document.querySelector('.modal-tab.active');
+                            const activeIdx = activeTab && APP.currentFile.data.sheetNames ? parseInt(activeTab.dataset.sheetIdx) : 0;
+                            const activeName = newData.sheetNames[activeIdx];
+                            renderSheet(newData.sheets[activeName], activeName, true);
+                        }
+                        
+                        if ($('syncStatus')) $('syncStatus').textContent = `Last sync: ${fmtTimeAgo(Date.now())}`;
+                    } catch (e) {
+                        console.error('Error fetching on webhook push:', e);
+                    }
+                }
+            });
+        }
+    } catch(err) {
+         console.warn("Socket.io not established", err);
     }
 }
 
-function simulateWSConnection() {
-    // Periodically simulate WebSocket health checks
-    setInterval(() => {
-        const connected = Math.random() > 0.02; // 98% uptime simulation
-        APP.wsConnected = connected;
-        const dot = $('syncDot');
-        const label = $('syncLabel');
-        const liveBadge = $('liveBadge');
-
+function updateSyncUI(connected) {
+    const dot = $('syncDot');
+    const label = $('syncLabel');
+    const liveBadge = $('liveBadge');
+    
+    if (dot && label && liveBadge) {
         if (connected) {
             dot.classList.remove('disconnected');
             label.textContent = 'Live Sync Active';
@@ -1420,17 +1415,12 @@ function simulateWSConnection() {
             dot.classList.add('disconnected');
             label.textContent = 'Reconnecting...';
             liveBadge.classList.add('disconnected');
-            toast('Connection lost. Attempting reconnect...', 'warning');
-            // Auto-reconnect after 3s
-            setTimeout(() => {
-                APP.wsConnected = true;
-                dot.classList.remove('disconnected');
-                label.textContent = 'Live Sync Active';
-                liveBadge.classList.remove('disconnected');
-                toast('Reconnected successfully!', 'success');
-            }, 3000);
         }
-    }, 30000);
+    }
+}
+
+function broadcastChange(type, detail) {
+    if ($('syncStatus')) $('syncStatus').textContent = `Last sync: just now`;
 }
 
 /* ═══════════════════════════════════════ FILE PREVIEW MODAL ═══════════════════════════════════════ */
@@ -2233,7 +2223,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 
     startLiveSync();
-    simulateWSConnection();
+    setupWebSockets();
 
     setTimeout(() => toast('System matrices loaded successfully', 'success'), 1200);
     setTimeout(() => toast('WebSocket connection established — Real-time sync active', 'info'), 2500);
