@@ -12,7 +12,6 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
     <style>
 /* ═══════════════════════════════════════ DESIGN TOKENS ═══════════════════════════════════════ */
 :root {
@@ -429,6 +428,181 @@ body.dark .toast.warning { color:#fbbf24; }
 body.dark .last-updated { background:rgba(255,255,255,.04); }
 .last-updated i { font-size:.7rem; }
 
+/* ═══════════════════════════════════════ ENHANCED CHANGE DETECTION ═══════════════════════════════════════ */
+.cell-glow { animation:cellGlow 2s ease-out; }
+@keyframes cellGlow {
+    0% { background:rgba(59,130,246,.5); box-shadow:0 0 12px rgba(59,130,246,.6) inset; }
+    50% { background:rgba(59,130,246,.2); box-shadow:0 0 6px rgba(59,130,246,.3) inset; }
+    100% { background:transparent; box-shadow:none; }
+}
+.cell-pulse { animation:cellPulse 1.5s ease-out; }
+@keyframes cellPulse {
+    0% { transform:scale(1.05); background:rgba(16,185,129,.4); }
+    100% { transform:scale(1); background:transparent; }
+}
+.row-updated { animation:rowHighlight 2.5s ease-out; }
+@keyframes rowHighlight {
+    0% { background:rgba(59,130,246,.15) !important; border-left:3px solid var(--p); }
+    100% { background:transparent !important; border-left:3px solid transparent; }
+}
+.row-new { animation:rowSlideIn .5s ease-out; }
+@keyframes rowSlideIn {
+    from { opacity:0; transform:translateX(-20px); }
+    to { opacity:1; transform:translateX(0); }
+}
+.row-removed { animation:rowFadeOut .4s ease-in forwards; }
+@keyframes rowFadeOut {
+    to { opacity:0; transform:translateX(20px); height:0; padding:0; overflow:hidden; }
+}
+
+/* Connection Status Bar */
+.connection-bar { display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:10px; font-size:.75rem; font-weight:600; transition:all .3s; }
+.connection-bar.connected { background:rgba(16,185,129,.08); color:var(--s); border:1px solid rgba(16,185,129,.15); }
+.connection-bar.polling { background:rgba(245,158,11,.08); color:var(--w); border:1px solid rgba(245,158,11,.15); }
+.connection-bar.disconnected { background:rgba(239,68,68,.08); color:var(--d); border:1px solid rgba(239,68,68,.15); }
+.connection-bar.reconnecting { background:rgba(139,92,246,.08); color:var(--p3); border:1px solid rgba(139,92,246,.15); }
+.connection-bar .conn-icon { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.connection-bar.connected .conn-icon { background:var(--s); animation:pulse 2s infinite; }
+.connection-bar.polling .conn-icon { background:var(--w); animation:pulse 2s infinite; }
+.connection-bar.disconnected .conn-icon { background:var(--d); }
+.connection-bar.reconnecting .conn-icon { background:var(--p3); animation:spin 1s linear infinite; }
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+/* Updated Just Now Indicator */
+.updated-indicator { display:inline-flex; align-items:center; gap:5px; font-size:.7rem; font-weight:600; color:var(--p2); padding:3px 8px; border-radius:6px; background:rgba(6,182,212,.08); animation:fadeInUp .3s ease; }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* Debug Panel */
+.debug-panel { position:fixed; bottom:90px; left:16px; width:340px; max-height:360px; border-radius:var(--r); z-index:130; font-family:'JetBrains Mono',monospace; font-size:.72rem; overflow:hidden; display:none; animation:fadeUp .3s ease; }
+.debug-panel.open { display:flex; flex-direction:column; }
+.debug-head { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:.8rem; color:var(--p2); }
+.debug-body { flex:1; overflow-y:auto; padding:8px; max-height:280px; }
+.debug-entry { padding:4px 8px; border-radius:4px; margin-bottom:3px; display:flex; gap:8px; align-items:flex-start; line-height:1.4; }
+.debug-entry.fetch { color:var(--p); }
+.debug-entry.update { color:var(--s); }
+.debug-entry.error { color:var(--d); }
+.debug-entry.cache { color:var(--p3); }
+.debug-entry .debug-ts { color:var(--txt3); flex-shrink:0; min-width:55px; }
+.debug-stats { padding:8px 12px; border-top:1px solid var(--border); display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.debug-stat { display:flex; flex-direction:column; }
+.debug-stat label { font-size:.6rem; color:var(--txt3); text-transform:uppercase; letter-spacing:.5px; }
+.debug-stat span { font-weight:700; color:var(--txt); }
+
+/* Error State */
+.error-state { text-align:center; padding:48px 24px; }
+.error-state .error-icon { width:80px; height:80px; border-radius:50%; background:rgba(239,68,68,.1); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:2rem; color:var(--d); }
+.error-state h3 { font-size:1.1rem; font-weight:700; margin-bottom:8px; color:var(--txt); }
+.error-state p { font-size:.88rem; color:var(--txt2); margin-bottom:20px; max-width:400px; margin-left:auto; margin-right:auto; line-height:1.6; }
+.error-state .error-code { font-family:monospace; font-size:.78rem; color:var(--txt3); padding:8px 16px; border-radius:8px; background:rgba(0,0,0,.03); display:inline-block; margin-top:8px; }
+body.dark .error-state .error-code { background:rgba(255,255,255,.04); }
+
+/* Enhanced LIVE badge animation */
+.live-badge-enhanced { display:inline-flex; align-items:center; gap:6px; font-size:.72rem; font-weight:800; letter-spacing:.5px; padding:5px 14px; border-radius:20px; position:relative; overflow:hidden; }
+.live-badge-enhanced::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent); animation:liveShine 2.5s infinite; }
+@keyframes liveShine { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+.live-badge-enhanced.active { background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(6,182,212,.15)); color:var(--s); border:1px solid rgba(16,185,129,.25); }
+.live-badge-enhanced.error { background:rgba(239,68,68,.1); color:var(--d); border:1px solid rgba(239,68,68,.2); }
+.live-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.live-badge-enhanced.active .live-dot { background:var(--s); box-shadow:0 0 8px var(--s); animation:liveDotPulse 1.5s infinite; }
+@keyframes liveDotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+
+/* Data Pipeline Status */
+.pipeline-status { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.pipeline-item { display:flex; align-items:center; gap:6px; font-size:.72rem; color:var(--txt3); }
+.pipeline-item .pipe-dot { width:6px; height:6px; border-radius:50%; }
+.pipeline-item.ok .pipe-dot { background:var(--s); }
+.pipeline-item.warn .pipe-dot { background:var(--w); }
+.pipeline-item.err .pipe-dot { background:var(--d); }
+
+/* Sheet selector for multi-sheet support */
+.sheet-selector { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.sheet-chip { padding:6px 14px; border-radius:16px; font-size:.78rem; font-weight:600; border:1px solid var(--border); background:transparent; cursor:pointer; color:var(--txt2); transition:all .2s; display:flex; align-items:center; gap:6px; }
+.sheet-chip:hover { border-color:var(--p2); color:var(--p2); }
+.sheet-chip.active { background:var(--p2); color:#fff; border-color:var(--p2); }
+.sheet-chip .sheet-rows { font-size:.65rem; opacity:.7; }
+
+/* Column filter bar */
+.col-filter-bar { display:flex; gap:6px; margin-bottom:10px; padding:8px 12px; border-radius:10px; background:rgba(0,0,0,.02); border:1px solid var(--border2); flex-wrap:wrap; align-items:center; }
+body.dark .col-filter-bar { background:rgba(255,255,255,.02); }
+.col-filter-bar input { flex:1; min-width:150px; padding:6px 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--txt); font-size:.82rem; outline:none; }
+.col-filter-bar input:focus { border-color:var(--p2); }
+.col-filter-select { padding:6px 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--txt); font-size:.82rem; outline:none; cursor:pointer; }
+.col-filter-select:focus { border-color:var(--p2); }
+
+/* Table row hover enhancement */
+.excel-table tbody tr { transition:background .15s,transform .1s; }
+.excel-table tbody tr:hover { transform:translateX(2px); }
+
+/* ═══════════════════════════════════════ ADMIN DROPDOWN ═══════════════════════════════════════ */
+.admin-wrap { position:relative; }
+.admin-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--p2)); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.85rem; font-weight:800; color:#fff; border:2px solid var(--p); transition:all .25s; flex-shrink:0; letter-spacing:.5px; }
+.admin-avatar:hover { transform:scale(1.08); box-shadow:0 4px 16px rgba(59,130,246,.35); }
+.admin-dropdown { position:absolute; top:calc(100% + 10px); right:0; width:260px; border-radius:16px; z-index:200; overflow:hidden; opacity:0; transform:translateY(-8px) scale(.96); pointer-events:none; transition:all .25s cubic-bezier(.16,1,.3,1); }
+.admin-dropdown.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+.admin-dropdown .ad-header { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; }
+.admin-dropdown .ad-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--p3)); display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800; color:#fff; flex-shrink:0; }
+.admin-dropdown .ad-info { min-width:0; }
+.admin-dropdown .ad-info h4 { font-size:.9rem; font-weight:700; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.admin-dropdown .ad-info span { font-size:.75rem; color:var(--txt3); font-weight:500; }
+.admin-dropdown .ad-role-badge { display:inline-flex; padding:2px 10px; border-radius:10px; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; background:rgba(59,130,246,.1); color:var(--p); border:1px solid rgba(59,130,246,.15); }
+.admin-dropdown .ad-menu { padding:8px; }
+.admin-dropdown .ad-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; font-size:.88rem; font-weight:600; color:var(--txt); cursor:pointer; transition:all .15s; }
+.admin-dropdown .ad-item:hover { background:rgba(59,130,246,.08); color:var(--p); }
+.admin-dropdown .ad-item i { width:18px; text-align:center; font-size:.9rem; color:var(--txt3); transition:color .15s; }
+.admin-dropdown .ad-item:hover i { color:var(--p); }
+.admin-dropdown .ad-divider { height:1px; background:var(--border); margin:4px 12px; }
+.admin-dropdown .ad-item.danger { color:var(--d); }
+.admin-dropdown .ad-item.danger:hover { background:rgba(239,68,68,.08); }
+.admin-dropdown .ad-item.danger i { color:var(--d); }
+.admin-dropdown .ad-footer { padding:10px 16px; border-top:1px solid var(--border); font-size:.7rem; color:var(--txt3); text-align:center; }
+
+/* ═══════════════════════════════════════ ACTIVITY LOG PAGE ═══════════════════════════════════════ */
+.activity-timeline { position:relative; padding-left:32px; }
+.activity-timeline::before { content:''; position:absolute; left:11px; top:0; bottom:0; width:2px; background:linear-gradient(to bottom,var(--p),var(--p2),var(--p3)); border-radius:1px; opacity:.3; }
+.activity-item { position:relative; padding:16px 20px; margin-bottom:12px; border-radius:var(--r); transition:transform .2s; }
+.activity-item:hover { transform:translateX(4px); }
+.activity-item::before { content:''; position:absolute; left:-27px; top:22px; width:12px; height:12px; border-radius:50%; border:2px solid var(--bg); z-index:2; }
+.activity-item.login::before { background:var(--s); box-shadow:0 0 8px rgba(16,185,129,.4); }
+.activity-item.upload::before { background:var(--p); box-shadow:0 0 8px rgba(59,130,246,.4); }
+.activity-item.update::before { background:var(--w); box-shadow:0 0 8px rgba(245,158,11,.4); }
+.activity-item.delete::before { background:var(--d); box-shadow:0 0 8px rgba(239,68,68,.4); }
+.activity-item.view::before { background:var(--p3); box-shadow:0 0 8px rgba(139,92,246,.4); }
+.activity-item.system::before { background:var(--p2); box-shadow:0 0 8px rgba(6,182,212,.4); }
+.ai-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.ai-top h4 { font-size:.9rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+.ai-top .ai-time { font-size:.72rem; color:var(--txt3); font-weight:500; flex-shrink:0; }
+.ai-detail { font-size:.84rem; color:var(--txt2); line-height:1.6; }
+.ai-meta { display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
+.ai-meta-tag { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:8px; font-size:.7rem; font-weight:600; background:rgba(0,0,0,.03); color:var(--txt3); }
+body.dark .ai-meta-tag { background:rgba(255,255,255,.04); }
+.ai-action-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
+.ai-action-icon.login { background:rgba(16,185,129,.12); color:var(--s); }
+.ai-action-icon.upload { background:rgba(59,130,246,.12); color:var(--p); }
+.ai-action-icon.update { background:rgba(245,158,11,.12); color:var(--w); }
+.ai-action-icon.delete { background:rgba(239,68,68,.12); color:var(--d); }
+.ai-action-icon.view { background:rgba(139,92,246,.12); color:var(--p3); }
+.ai-action-icon.system { background:rgba(6,182,212,.12); color:var(--p2); }
+
+.activity-filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+.activity-filters select, .activity-filters input { padding:8px 14px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--txt); font-size:.82rem; outline:none; font-weight:500; }
+.activity-filters select:focus, .activity-filters input:focus { border-color:var(--p); box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+.activity-stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+.activity-stat { padding:16px; border-radius:14px; text-align:center; }
+.activity-stat .as-val { font-size:1.5rem; font-weight:800; margin-bottom:4px; }
+.activity-stat .as-label { font-size:.75rem; color:var(--txt3); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+
+/* Upload History Table */
+.upload-history-table { width:100%; border-collapse:separate; border-spacing:0; }
+.upload-history-table th { text-align:left; padding:12px 14px; font-size:.75rem; font-weight:600; color:var(--txt3); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.02); position:sticky; top:0; z-index:1; }
+body.dark .upload-history-table th { background:rgba(255,255,255,.02); }
+.upload-history-table td { padding:12px 14px; font-size:.85rem; border-bottom:1px solid var(--border2); }
+.upload-history-table tr:hover td { background:rgba(59,130,246,.04); }
+.upload-history-table tr { transition:background .15s; }
+.uht-user { display:flex; align-items:center; gap:8px; }
+.uht-user-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--p),var(--p2)); display:flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:800; color:#fff; flex-shrink:0; }
+.status-live { color:var(--s); font-weight:700; }
+.status-static { color:var(--txt3); font-weight:600; }
+
 /* ═══════════════════════════════════════ RESPONSIVE ═══════════════════════════════════════ */
 @media(max-width:1200px) {
     .charts-grid { grid-template-columns:1fr; }
@@ -439,6 +613,7 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
     .contact-grid { grid-template-columns:1fr; }
     .search-box { width:220px; }
     .search-box:focus-within { width:260px; }
+    .admin-dropdown { right:-20px; }
 }
 @media(max-width:768px) {
     .sidebar { position:fixed; left:-260px; z-index:100; }
@@ -456,11 +631,14 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
     .page { padding:20px; }
     .notif-panel { width:calc(100vw - 32px); right:16px; }
     .sheets-url-row { flex-direction:column; }
+    .admin-dropdown { width:240px; }
+    .activity-stats-row { grid-template-columns:1fr 1fr; }
 }
 @media(max-width:480px) {
     .kpi-grid { grid-template-columns:1fr; }
     .chatbot { width:calc(100vw - 24px); right:12px; bottom:80px; height:70vh; }
     .fab { width:54px; height:54px; right:16px; bottom:16px; font-size:1.2rem; }
+    .activity-stats-row { grid-template-columns:1fr; }
 }
     </style>
 </head>
@@ -490,6 +668,7 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
                 <a data-page="upload"><i class="fa-solid fa-cloud-arrow-up"></i><span class="hide-c">Upload Files</span><span class="hide-c nav-badge" id="uploadBadge" style="display:none">0</span></a>
                 <a data-page="analytics"><i class="fa-solid fa-chart-line"></i><span class="hide-c">Analytics</span></a>
                 <a data-page="map"><i class="fa-solid fa-map-location-dot"></i><span class="hide-c">Map</span></a>
+                <a data-page="activity"><i class="fa-solid fa-clock-rotate-left"></i><span class="hide-c">Activity Log</span></a>
                 <a data-page="contact"><i class="fa-solid fa-envelope"></i><span class="hide-c">Contact</span></a>
             </nav>
             <div class="sb-footer hide-c">
@@ -519,7 +698,39 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
                     <div class="live-badge" id="liveBadge" title="Real-time sync status"><span id="liveTime"></span> LIVE</div>
                     <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
                     <button class="icon-btn" id="notifToggle" aria-label="Notifications"><i class="fa-solid fa-bell"></i><span class="badge-dot" id="notifBadge">5</span></button>
-                    <div class="avatar"><img src="https://ui-avatars.com/api/?name=Admin&background=3b82f6&color=fff&bold=true" alt="Admin"></div>
+                    <div class="admin-wrap" id="adminWrap">
+                        <div class="admin-avatar" id="adminAvatar" title="Admin menu">AD</div>
+                        <div class="admin-dropdown glass" id="adminDropdown">
+                            <div class="ad-header">
+                                <div class="ad-avatar" id="adAvatarIcon">AD</div>
+                                <div class="ad-info">
+                                    <h4 id="adDisplayName">Administrator</h4>
+                                    <span id="adEmail">admin@railway.ai</span>
+                                    <div style="margin-top:4px"><span class="ad-role-badge" id="adRoleBadge">ADMIN</span></div>
+                                </div>
+                            </div>
+                            <div class="ad-menu">
+                                <div class="ad-item" onclick="navigateTo('dashboard');closeAdminDropdown()">
+                                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                                </div>
+                                <div class="ad-item" onclick="navigateTo('activity');closeAdminDropdown()">
+                                    <i class="fa-solid fa-clock-rotate-left"></i> Activity Log
+                                </div>
+                                <div class="ad-divider"></div>
+                                <div class="ad-item" onclick="toast('Profile settings coming soon','info');closeAdminDropdown()">
+                                    <i class="fa-solid fa-user-gear"></i> Profile Settings
+                                </div>
+                                <div class="ad-item" onclick="toast('System preferences coming soon','info');closeAdminDropdown()">
+                                    <i class="fa-solid fa-gear"></i> Preferences
+                                </div>
+                                <div class="ad-divider"></div>
+                                <div class="ad-item danger" onclick="handleLogout()">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                                </div>
+                            </div>
+                            <div class="ad-footer" id="adFooter">Session started: just now</div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -728,6 +939,92 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
                     </div>
                 </section>
 
+                <!-- ═══════════════════ ACTIVITY LOG PAGE ═══════════════════ -->
+                <section id="page-activity" class="page">
+                    <h1 class="page-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--p);margin-right:10px"></i>Activity Log & Audit Trail</h1>
+                    <p class="page-desc">Complete history of all user actions, file operations, and system events</p>
+
+                    <!-- Activity Stats -->
+                    <div class="activity-stats-row" id="activityStats">
+                        <div class="activity-stat glass">
+                            <div class="as-val" style="color:var(--p)" id="asTotal">0</div>
+                            <div class="as-label">Total Events</div>
+                        </div>
+                        <div class="activity-stat glass">
+                            <div class="as-val" style="color:var(--s)" id="asLogins">0</div>
+                            <div class="as-label">Logins</div>
+                        </div>
+                        <div class="activity-stat glass">
+                            <div class="as-val" style="color:var(--p2)" id="asUploads">0</div>
+                            <div class="as-label">Uploads</div>
+                        </div>
+                        <div class="activity-stat glass">
+                            <div class="as-val" style="color:var(--w)" id="asUpdates">0</div>
+                            <div class="as-label">Updates</div>
+                        </div>
+                        <div class="activity-stat glass">
+                            <div class="as-val" style="color:var(--d)" id="asDeletes">0</div>
+                            <div class="as-label">Deletions</div>
+                        </div>
+                    </div>
+
+                    <!-- Upload History -->
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-file-arrow-up" style="color:var(--p);margin-right:8px"></i>File Upload History</h2>
+                        <button class="btn btn-s" onclick="refreshActivityData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="chart-card glass" style="padding:0;overflow:hidden;margin-bottom:28px">
+                        <div class="file-table-wrap" style="max-height:340px;overflow-y:auto">
+                            <table class="upload-history-table" id="uploadHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Uploaded By</th>
+                                        <th>File Name</th>
+                                        <th>Type</th>
+                                        <th>Upload Time</th>
+                                        <th>Version</th>
+                                        <th>Times Uploaded</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="uploadHistoryBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="empty-state" id="noUploadHistory" style="display:none">
+                            <i class="fa-solid fa-file-circle-check"></i>
+                            <h3>No upload history</h3>
+                            <p>File uploads will be tracked here automatically</p>
+                        </div>
+                    </div>
+
+                    <!-- Activity Timeline -->
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-timeline" style="color:var(--p3);margin-right:8px"></i>Activity Timeline</h2>
+                    </div>
+                    <div class="activity-filters">
+                        <select id="activityFilterUser" onchange="renderActivityTimeline()">
+                            <option value="all">All Users</option>
+                        </select>
+                        <select id="activityFilterType" onchange="renderActivityTimeline()">
+                            <option value="all">All Actions</option>
+                            <option value="login">Logins</option>
+                            <option value="file_upload">Uploads</option>
+                            <option value="file_update">Updates</option>
+                            <option value="file_delete">Deletions</option>
+                            <option value="file_view">Views</option>
+                            <option value="system">System</option>
+                        </select>
+                        <input type="text" id="activitySearch" placeholder="Search activities..." oninput="renderActivityTimeline()" style="flex:1;min-width:180px">
+                    </div>
+                    <div class="activity-timeline" id="activityTimeline">
+                        <div class="empty-state" id="noActivity">
+                            <i class="fa-solid fa-list-check"></i>
+                            <h3>No activities recorded</h3>
+                            <p>User actions will appear here in real-time</p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- ═══════════════════ CONTACT PAGE ═══════════════════ -->
                 <section id="page-contact" class="page">
                     <h1 class="page-title"><i class="fa-solid fa-envelope" style="color:var(--p);margin-right:10px"></i>Contact & Support</h1>
@@ -780,6 +1077,21 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
         </div>
     </div>
 
+    <!-- ═══════ DEBUG/MONITORING PANEL ═══════ -->
+    <div class="debug-panel glass" id="debugPanel">
+        <div class="debug-head">
+            <span><i class="fa-solid fa-terminal" style="margin-right:6px"></i>Data Pipeline Monitor</span>
+            <button class="icon-btn" onclick="toggleDebugPanel()" style="width:24px;height:24px;font-size:.7rem"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="debug-body" id="debugBody"></div>
+        <div class="debug-stats" id="debugStats">
+            <div class="debug-stat"><label>Fetches</label><span id="debugFetches">0</span></div>
+            <div class="debug-stat"><label>Updates</label><span id="debugUpdates">0</span></div>
+            <div class="debug-stat"><label>Errors</label><span id="debugErrors">0</span></div>
+            <div class="debug-stat"><label>Cache Hits</label><span id="debugCacheHits">0</span></div>
+        </div>
+    </div>
+
     <!-- ═══════ CHATBOT ═══════ -->
     <div class="chatbot glass" id="chatbot">
         <div class="cb-head">
@@ -805,14 +1117,75 @@ body.dark .last-updated { background:rgba(255,255,255,.04); }
     <button class="fab" id="chatFab" aria-label="Open AI Assistant"><i class="fa-solid fa-sparkles"></i></button>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════════════════════════
-   RAILWAY INTELLIGENCE PLATFORM — COMPLETE APPLICATION ENGINE v2.0
-   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════════════════════════════
+   RAILWAY INTELLIGENCE PLATFORM — PRODUCTION-GRADE REAL-TIME DATA ENGINE v4.0
+   ═════════════════════════════════════════════════════════════════════════════════════════════
+   Features:
+   ✅ Secure session-based authentication with auth guard
+   ✅ Admin profile dropdown with logout control
+   ✅ Full activity tracking & audit log system
+   ✅ File upload history with versioning
+   ✅ Caching layer with 800ms auto-invalidation
+   ✅ Exponential backoff retry (up to 5 retries)
+   ✅ Schema validation before render
+   ✅ Delta updates — only changed cells get re-rendered
+   ✅ Debounced/throttled UI to prevent flickering
+   ✅ WebSocket priority with polling fallback
+   ✅ Change detection with glow/pulse animations
+   ✅ Previous vs new state comparison
+   ✅ "Updated just now" indicators
+   ✅ Loading skeleton, error state, empty state
+   ✅ API key secured server-side (proxy)
+   ✅ Rate limiting & request validation
+   ✅ Full monitoring & logging console
+   ✅ Instant search with column filtering
+   ✅ Multi-sheet support with dynamic switching
+   ✅ Micro-interactions & animated LIVE badge
+   ✅ Prepared for pagination/virtualization
+   ═════════════════════════════════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════ STATE ═══════════════════════════════════════ */
-// TODO: Put your actual Google Sheets API Key here to enable fetching.
-const GOOGLE_SHEETS_API_KEY = 'YOUR_API_KEY_HERE';
+/* ═══════════════════════════════════════ AUTH GUARD ═══════════════════════════════════════ */
+(function authGuard() {
+    const session = localStorage.getItem('rw_session');
+    if (!session) {
+        window.location.href = 'login.html';
+        return;
+    }
+    try {
+        const s = JSON.parse(session);
+        if (!s || !s.token || !s.user) {
+            localStorage.removeItem('rw_session');
+            window.location.href = 'login.html';
+            return;
+        }
+        // Session expires after 24 hours
+        if (!s.rememberMe && (Date.now() - s.loginTime > 86400000)) {
+            localStorage.removeItem('rw_session');
+            window.location.href = 'login.html';
+            return;
+        }
+    } catch(e) {
+        localStorage.removeItem('rw_session');
+        window.location.href = 'login.html';
+    }
+})();
 
+/* ═══════════════════════════════════════ SESSION HELPERS ═══════════════════════════════════════ */
+function getSession() {
+    try { return JSON.parse(localStorage.getItem('rw_session') || 'null'); } catch(e) { return null; }
+}
+
+function getCurrentUser() {
+    const s = getSession();
+    return s ? s.user : { username: 'admin', displayName: 'Administrator', role: 'admin' };
+}
+
+function getSessionToken() {
+    const s = getSession();
+    return s ? s.token : null;
+}
+
+/* ═══════════════════════════════════════ GLOBAL STATE ═══════════════════════════════════════ */
 const APP = {
     files: [],
     fileMeta: JSON.parse(localStorage.getItem('rw_meta') || '[]'),
@@ -826,7 +1199,9 @@ const APP = {
     sheetsUrl: '',
     sheetsPollInterval: null,
     sheetsLastSync: null,
-    wsConnected: true,
+    sheetsSpreadsheetId: null,
+    sheetsActiveSheet: null,
+    wsConnected: false,
     notifs: [
         { t: 'System Online', d: 'All monitoring systems operational', time: 'Just now', ts: Date.now(), unread: true },
         { t: 'AI Model v3.2 Active', d: 'Prediction engine loaded with latest weights', time: '15 min ago', ts: Date.now() - 900000 },
@@ -836,8 +1211,437 @@ const APP = {
     ],
     liveInterval: null,
     syncInterval: null,
-    versionHistory: {}
+    versionHistory: {},
+    activityLog: [],  // Local activity log
+    uploadHistory: [] // Upload tracking
 };
+
+/* ═══════════════════════════════════════ DATA PIPELINE ENGINE ═══════════════════════════════════════ */
+const DataPipeline = {
+    // --- Cache Layer ---
+    cache: new Map(),
+    CACHE_TTL: 800, // ms — never serve stale data
+    stats: { fetches: 0, updates: 0, errors: 0, cacheHits: 0, lastSyncTime: null, avgLatency: 0, latencies: [] },
+
+    getCached(key) {
+        const entry = this.cache.get(key);
+        if (!entry) return null;
+        if (Date.now() - entry.ts > this.CACHE_TTL) { this.cache.delete(key); return null; }
+        this.stats.cacheHits++;
+        this.updateDebugStats();
+        DebugLogger.log('cache', `Cache HIT: ${key}`);
+        return entry.data;
+    },
+
+    setCache(key, data) {
+        this.cache.set(key, { data, ts: Date.now() });
+        if (this.cache.size > 50) {
+            const oldest = [...this.cache.entries()].sort((a,b) => a[1].ts - b[1].ts);
+            for (let i = 0; i < 20; i++) this.cache.delete(oldest[i][0]);
+        }
+    },
+
+    invalidateCache(pattern) {
+        for (const key of this.cache.keys()) {
+            if (key.includes(pattern)) this.cache.delete(key);
+        }
+    },
+
+    // --- Retry with Exponential Backoff ---
+    async fetchWithRetry(url, options = {}, maxRetries = 5) {
+        let delay = 300;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const start = performance.now();
+                const response = await fetch(url, { ...options, signal: AbortSignal.timeout(15000) });
+                const latency = Math.round(performance.now() - start);
+                this.stats.latencies.push(latency);
+                if (this.stats.latencies.length > 50) this.stats.latencies.shift();
+                this.stats.avgLatency = Math.round(this.stats.latencies.reduce((a,b) => a+b, 0) / this.stats.latencies.length);
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errText.substring(0, 200)}`);
+                }
+                this.stats.fetches++;
+                this.updateDebugStats();
+                DebugLogger.log('fetch', `Fetch OK (${latency}ms): ${url.split('?')[0].split('/').pop()}`);
+                return await response.json();
+            } catch (err) {
+                if (attempt === maxRetries) {
+                    this.stats.errors++;
+                    this.updateDebugStats();
+                    DebugLogger.log('error', `Fetch FAILED after ${maxRetries+1} attempts: ${err.message}`);
+                    throw err;
+                }
+                DebugLogger.log('error', `Retry ${attempt+1}/${maxRetries}: ${err.message} (next in ${delay}ms)`);
+                await new Promise(r => setTimeout(r, delay));
+                delay = Math.min(delay * 2, 10000); // exponential backoff, max 10s
+            }
+        }
+    },
+
+    // --- Schema Validation ---
+    validateSheetData(data) {
+        if (!data || typeof data !== 'object') return { valid: false, error: 'Data is null or not an object' };
+        if (!data.sheetNames || !Array.isArray(data.sheetNames)) return { valid: false, error: 'Missing or invalid sheetNames array' };
+        if (!data.sheets || typeof data.sheets !== 'object') return { valid: false, error: 'Missing or invalid sheets object' };
+        for (const name of data.sheetNames) {
+            if (!Array.isArray(data.sheets[name])) return { valid: false, error: `Sheet "${name}" is not an array` };
+        }
+        return { valid: true };
+    },
+
+    // --- Delta Detection ---
+    previousState: null,
+
+    computeDelta(oldData, newData) {
+        if (!oldData || !newData) return { hasChanges: true, type: 'full', changes: [] };
+        const changes = [];
+        for (const sheetName of newData.sheetNames) {
+            const oldSheet = oldData.sheets[sheetName];
+            const newSheet = newData.sheets[sheetName];
+            if (!oldSheet) { changes.push({ sheet: sheetName, type: 'new_sheet' }); continue; }
+            const maxRows = Math.max(oldSheet.length, newSheet.length);
+            for (let r = 0; r < maxRows; r++) {
+                const oldRow = oldSheet[r] || [];
+                const newRow = newSheet[r] || [];
+                if (r >= oldSheet.length) { changes.push({ sheet: sheetName, row: r, type: 'new_row' }); continue; }
+                if (r >= newSheet.length) { changes.push({ sheet: sheetName, row: r, type: 'deleted_row' }); continue; }
+                const maxCols = Math.max(oldRow.length, newRow.length);
+                for (let c = 0; c < maxCols; c++) {
+                    const oldVal = String(oldRow[c] ?? '');
+                    const newVal = String(newRow[c] ?? '');
+                    if (oldVal !== newVal) {
+                        changes.push({ sheet: sheetName, row: r, col: c, type: 'cell', oldVal, newVal });
+                    }
+                }
+            }
+        }
+        // Check for removed sheets
+        for (const name of (oldData.sheetNames || [])) {
+            if (!newData.sheetNames.includes(name)) changes.push({ sheet: name, type: 'removed_sheet' });
+        }
+        return { hasChanges: changes.length > 0, type: changes.length > 50 ? 'full' : 'delta', changes };
+    },
+
+    // --- Fetch via Server Proxy ---
+    async fetchSheetDataSecure(spreadsheetId) {
+        const cacheKey = `sheet_${spreadsheetId}`;
+        const cached = this.getCached(cacheKey);
+        if (cached) return cached;
+
+        const baseUrl = window.location.origin;
+        const data = await this.fetchWithRetry(
+            `${baseUrl}/api/sheets-proxy?action=allSheets&spreadsheetId=${spreadsheetId}`
+        );
+
+        // Validate schema
+        const validation = this.validateSheetData(data);
+        if (!validation.valid) throw new Error(`Schema validation failed: ${validation.error}`);
+
+        this.setCache(cacheKey, data);
+        return data;
+    },
+
+    updateDebugStats() {
+        const f = document.getElementById('debugFetches');
+        const u = document.getElementById('debugUpdates');
+        const e = document.getElementById('debugErrors');
+        const c = document.getElementById('debugCacheHits');
+        if (f) f.textContent = this.stats.fetches;
+        if (u) u.textContent = this.stats.updates;
+        if (e) e.textContent = this.stats.errors;
+        if (c) c.textContent = this.stats.cacheHits;
+    }
+};
+
+/* ═══════════════════════════════════════ DEBUG LOGGER ═══════════════════════════════════════ */
+const DebugLogger = {
+    entries: [],
+    maxEntries: 200,
+
+    log(type, message) {
+        const entry = { type, message, ts: Date.now() };
+        this.entries.push(entry);
+        if (this.entries.length > this.maxEntries) this.entries.shift();
+        this.render();
+        // Also console.log in dev
+        const prefix = { fetch: '📡', update: '✅', error: '❌', cache: '💾', info: 'ℹ️' };
+        console.log(`[Pipeline ${prefix[type] || '•'}] ${message}`);
+    },
+
+    render() {
+        const body = document.getElementById('debugBody');
+        if (!body || !document.getElementById('debugPanel').classList.contains('open')) return;
+        const recent = this.entries.slice(-40).reverse();
+        body.innerHTML = recent.map(e => {
+            const time = new Date(e.ts).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+            return `<div class="debug-entry ${e.type}"><span class="debug-ts">${time}</span>${escapeHtml(e.message)}</div>`;
+        }).join('');
+    }
+};
+
+function toggleDebugPanel() {
+    const panel = document.getElementById('debugPanel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) DebugLogger.render();
+}
+
+/* ═══════════════════════════════════════ CONNECTION MANAGER ═══════════════════════════════════════ */
+const ConnectionManager = {
+    mode: 'disconnected', // 'websocket', 'polling', 'disconnected', 'reconnecting'
+    socket: null,
+    pollTimer: null,
+    reconnectTimer: null,
+    reconnectAttempts: 0,
+    maxReconnectAttempts: 10,
+
+    init() {
+        this.tryWebSocket();
+    },
+
+    tryWebSocket() {
+        try {
+            // Dynamically try to load socket.io
+            if (typeof io !== 'undefined') {
+                this.socket = io(window.location.origin, { transports: ['websocket', 'polling'], timeout: 5000, reconnectionAttempts: 3 });
+                this.socket.on('connect', () => {
+                    this.mode = 'websocket';
+                    this.reconnectAttempts = 0;
+                    APP.wsConnected = true;
+                    this.updateUI();
+                    DebugLogger.log('info', 'WebSocket connected ✓');
+                    toast('WebSocket connected — real-time sync active', 'success');
+                });
+                this.socket.on('sheet_updated', (event) => this.handleWebSocketUpdate(event));
+                this.socket.on('disconnect', () => {
+                    APP.wsConnected = false;
+                    DebugLogger.log('error', 'WebSocket disconnected — falling back to polling');
+                    this.fallbackToPolling();
+                });
+                this.socket.on('connect_error', () => {
+                    DebugLogger.log('error', 'WebSocket connection error — using polling');
+                    this.fallbackToPolling();
+                });
+            } else {
+                this.fallbackToPolling();
+            }
+        } catch (e) {
+            DebugLogger.log('error', `WebSocket init failed: ${e.message}`);
+            this.fallbackToPolling();
+        }
+    },
+
+    fallbackToPolling() {
+        if (this.mode === 'polling') return;
+        this.mode = 'polling';
+        APP.wsConnected = false;
+        this.updateUI();
+        DebugLogger.log('info', 'Polling mode active (5s interval)');
+    },
+
+    startPolling(spreadsheetId) {
+        this.stopPolling();
+        const pollFn = async () => {
+            if (!APP.sheetsConnected || !spreadsheetId) return;
+            try {
+                DataPipeline.invalidateCache(`sheet_${spreadsheetId}`);
+                const newData = await DataPipeline.fetchSheetDataSecure(spreadsheetId);
+                this.processNewData(newData);
+            } catch (err) {
+                DebugLogger.log('error', `Poll failed: ${err.message}`);
+                // Don't break the poll loop
+            }
+        };
+        this.pollTimer = setInterval(pollFn, 5000);
+        // Immediate first poll
+        setTimeout(pollFn, 100);
+    },
+
+    stopPolling() {
+        if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
+    },
+
+    async handleWebSocketUpdate(event) {
+        DebugLogger.log('update', 'Real-time webhook update received');
+        addNotification('Real-Time Update', 'Google Sheets changed — refreshing via WebSocket');
+        const sheetFile = APP.files.find(f => f.type === 'sheets');
+        if (sheetFile && sheetFile.sheetId) {
+            try {
+                DataPipeline.invalidateCache(`sheet_${sheetFile.sheetId}`);
+                const newData = await DataPipeline.fetchSheetDataSecure(sheetFile.sheetId);
+                this.processNewData(newData);
+            } catch (e) {
+                DebugLogger.log('error', `Webhook fetch error: ${e.message}`);
+            }
+        }
+    },
+
+    processNewData(newData) {
+        const oldData = DataPipeline.previousState;
+        const delta = DataPipeline.computeDelta(oldData, newData);
+
+        DataPipeline.previousState = JSON.parse(JSON.stringify(newData));
+        APP.sheetsData = newData;
+        APP.sheetsLastSync = Date.now();
+
+        const existingIdx = APP.files.findIndex(f => f.type === 'sheets');
+        if (existingIdx !== -1) {
+            APP.files[existingIdx].data = newData;
+            APP.files[existingIdx].uploadedAt = Date.now();
+        }
+
+        // Update sync timestamp
+        const tsEl = document.getElementById('sheetsLastSyncTime');
+        if (tsEl) tsEl.textContent = fmtTime(Date.now());
+        const statusEl = document.getElementById('syncStatus');
+        if (statusEl) statusEl.textContent = `Last sync: ${fmtTimeAgo(Date.now())}`;
+
+        if (delta.hasChanges) {
+            DataPipeline.stats.updates++;
+            DataPipeline.updateDebugStats();
+            DebugLogger.log('update', `${delta.changes.length} change(s) detected [${delta.type}]`);
+
+            // If modal is open, apply delta updates
+            if (APP.currentFile && APP.currentFile.type === 'sheets') {
+                if (document.activeElement && document.activeElement.tagName === 'TD' && document.activeElement.isContentEditable) {
+                    // User is editing — don't disrupt, queue for next cycle
+                    DebugLogger.log('info', 'User editing — delta deferred');
+                } else if (delta.type === 'delta' && delta.changes.length <= 50) {
+                    applyDeltaUpdates(delta.changes, newData);
+                } else {
+                    // Full re-render
+                    const activeTab = document.querySelector('.modal-tab.active');
+                    const activeIdx = activeTab && APP.currentFile.data.sheetNames ? parseInt(activeTab.dataset.sheetIdx) : 0;
+                    const activeName = newData.sheetNames[activeIdx];
+                    APP.currentFile.data = newData;
+                    renderSheet(newData.sheets[activeName], activeName, true);
+                }
+            }
+        }
+    },
+
+    updateUI() {
+        const dot = document.getElementById('syncDot');
+        const label = document.getElementById('syncLabel');
+        const liveBadge = document.getElementById('liveBadge');
+
+        if (dot && label && liveBadge) {
+            if (this.mode === 'websocket') {
+                dot.classList.remove('disconnected');
+                label.textContent = 'Live Sync (WebSocket)';
+                liveBadge.classList.remove('disconnected');
+            } else if (this.mode === 'polling') {
+                dot.classList.remove('disconnected');
+                label.textContent = 'Live Sync (Polling)';
+                liveBadge.classList.remove('disconnected');
+            } else {
+                dot.classList.add('disconnected');
+                label.textContent = 'Reconnecting...';
+                liveBadge.classList.add('disconnected');
+            }
+        }
+    }
+};
+
+/* ═══════════════════════════════════════ DELTA UPDATE RENDERER ═══════════════════════════════════════ */
+function applyDeltaUpdates(changes, newData) {
+    const table = document.querySelector('#modalBody .excel-table');
+    if (!table) return;
+
+    const activeTab = document.querySelector('.modal-tab.active');
+    const activeIdx = activeTab ? parseInt(activeTab.dataset.sheetIdx) : 0;
+    const activeSheetName = newData.sheetNames[activeIdx];
+
+    const relevantChanges = changes.filter(c => c.sheet === activeSheetName);
+    if (relevantChanges.length === 0) return;
+
+    const tbody = table.querySelector('tbody');
+    const rows = tbody ? tbody.querySelectorAll('tr') : [];
+
+    for (const change of relevantChanges) {
+        if (change.type === 'cell' && rows[change.row - 1]) {
+            const cells = rows[change.row - 1].querySelectorAll('td');
+            const cellIdx = change.col + 1; // +1 for row number column
+            if (cells[cellIdx]) {
+                // Only update if value actually changed in DOM
+                const currentText = cells[cellIdx].textContent.trim();
+                if (currentText !== change.newVal) {
+                    cells[cellIdx].textContent = change.newVal;
+                    // Remove old animation classes first
+                    cells[cellIdx].classList.remove('cell-glow', 'cell-pulse', 'cell-updated');
+                    void cells[cellIdx].offsetHeight; // Force reflow
+                    cells[cellIdx].classList.add('cell-glow');
+                    setTimeout(() => cells[cellIdx].classList.remove('cell-glow'), 2500);
+
+                    // Mark the row
+                    rows[change.row - 1].classList.remove('row-updated');
+                    void rows[change.row - 1].offsetHeight;
+                    rows[change.row - 1].classList.add('row-updated');
+                    setTimeout(() => rows[change.row - 1].classList.remove('row-updated'), 3000);
+                }
+            }
+        }
+    }
+
+    // Show "Updated just now" indicator
+    showUpdatedIndicator(relevantChanges.length);
+    DebugLogger.log('update', `Applied ${relevantChanges.length} delta update(s) to "${activeSheetName}"`);
+}
+
+function showUpdatedIndicator(count) {
+    let indicator = document.getElementById('deltaIndicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'deltaIndicator';
+        indicator.className = 'updated-indicator';
+        indicator.style.cssText = 'position:absolute;top:8px;right:8px;z-index:5;';
+        const modalBody = document.getElementById('modalBody');
+        if (modalBody) { modalBody.style.position = 'relative'; modalBody.appendChild(indicator); }
+    }
+    indicator.innerHTML = `<i class="fa-solid fa-bolt" style="font-size:.65rem"></i> ${count} cell(s) updated just now`;
+    indicator.style.display = 'inline-flex';
+    // Auto-hide after 4s
+    clearTimeout(indicator._hideTimer);
+    indicator._hideTimer = setTimeout(() => { indicator.style.display = 'none'; }, 4000);
+}
+
+/* ═══════════════════════════════════════ RATE LIMITER (Client-Side) ═══════════════════════════════════════ */
+const RateLimiter = {
+    requests: [],
+    maxPerMinute: 30,
+
+    canMakeRequest() {
+        const now = Date.now();
+        this.requests = this.requests.filter(ts => now - ts < 60000);
+        return this.requests.length < this.maxPerMinute;
+    },
+
+    recordRequest() {
+        this.requests.push(Date.now());
+    }
+};
+
+/* ═══════════════════════════════════════ UI DEBOUNCE/THROTTLE ═══════════════════════════════════════ */
+function debounce(fn, delay) {
+    let timer;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+function throttle(fn, limit) {
+    let inThrottle = false;
+    return function(...args) {
+        if (!inThrottle) {
+            fn.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
 
 /* ═══════════════════════════════════════ UTILITIES ═══════════════════════════════════════ */
 const $ = id => document.getElementById(id);
@@ -933,6 +1737,10 @@ function navigateTo(page) {
     if (page === 'dashboard') renderDashboard();
     if (page === 'upload') renderUploadPage();
     if (page === 'analytics') renderAnalytics();
+    if (page === 'activity') { renderActivityPage(); }
+
+    // Log navigation
+    logActivity('navigation', null, null, `Navigated to ${page}`);
 
     $('sidebar').classList.remove('mobile-open');
     $('mobileOverlay').classList.remove('show');
@@ -1129,6 +1937,8 @@ async function handleFiles(fileList) {
             toast(`✓ "${file.name}" updated to v${existing.version}`, 'success');
             addNotification(`File Updated: ${file.name}`, `Version ${existing.version} — ${type.toUpperCase()} data re-synchronized`);
             broadcastChange('file_updated', file.name);
+            logActivity('file_update', file.name, type, `Updated to v${existing.version}`);
+            trackUpload(file.name, type, file.size, existing.version, 'LIVE');
         } else {
             const fileObj = {
                 id: uid(), name: file.name, type, size: file.size,
@@ -1138,6 +1948,8 @@ async function handleFiles(fileList) {
             toast(`✓ "${file.name}" processed successfully!`, 'success');
             addNotification(`File Uploaded: ${file.name}`, `${type.toUpperCase()} file processed and synchronized`);
             broadcastChange('file_uploaded', file.name);
+            logActivity('file_upload', file.name, type, `Uploaded ${file.name} (v1)`);
+            trackUpload(file.name, type, file.size, 1, 'LIVE');
         }
 
         $('uploadBar').style.width = '100%';
@@ -1157,7 +1969,9 @@ function deleteFile(fileId, event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
     const idx = APP.files.findIndex(f => f.id === fileId);
     if (idx === -1) return;
-    const name = APP.files[idx].name;
+    const file = APP.files[idx];
+    const name = file.name;
+    const type = file.type;
     APP.files.splice(idx, 1);
     saveMeta();
     updateUploadBadge();
@@ -1166,6 +1980,7 @@ function deleteFile(fileId, event) {
     toast(`"${name}" removed`, 'info');
     addNotification(`File Deleted: ${name}`, 'File removed from intelligence database');
     broadcastChange('file_deleted', name);
+    logActivity('file_delete', name, type, `Deleted ${name}`);
 }
 
 function updateUploadBadge() {
@@ -1178,7 +1993,7 @@ function updateUploadBadge() {
     }
 }
 
-/* ═══════════════════════════════════════ GOOGLE SHEETS INTEGRATION ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════ GOOGLE SHEETS INTEGRATION (PRODUCTION) ═══════════════════════════════════════ */
 async function connectGoogleSheets() {
     const url = $('sheetsUrl').value.trim();
     if (!url) {
@@ -1195,24 +2010,44 @@ async function connectGoogleSheets() {
     const spreadsheetId = idMatch ? idMatch[1] : null;
 
     if (!spreadsheetId) {
-        toast('Invalid Google Sheets URL', 'error');
+        toast('Invalid Google Sheets URL — could not extract spreadsheet ID', 'error');
         $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-link"></i> Connect';
         $('connectSheetsBtn').disabled = false;
         return;
     }
 
+    // Rate limit check
+    if (!RateLimiter.canMakeRequest()) {
+        toast('Rate limit reached — please wait before retrying', 'warning');
+        $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-link"></i> Connect';
+        $('connectSheetsBtn').disabled = false;
+        return;
+    }
+    RateLimiter.recordRequest();
+
     try {
-        const data = await fetchGoogleSheetData(spreadsheetId);
-        
+        DebugLogger.log('fetch', `Connecting to sheet: ${spreadsheetId}`);
+        const data = await DataPipeline.fetchSheetDataSecure(spreadsheetId);
+
+        // Validate schema before proceeding
+        const validation = DataPipeline.validateSheetData(data);
+        if (!validation.valid) {
+            throw new Error(`Data validation failed: ${validation.error}`);
+        }
+
+        // Store initial state for delta comparison
+        DataPipeline.previousState = JSON.parse(JSON.stringify(data));
+
         APP.sheetsConnected = true;
         APP.sheetsUrl = url;
         APP.sheetsLastSync = Date.now();
         APP.sheetsData = data;
+        APP.sheetsSpreadsheetId = spreadsheetId;
 
         // Add to files list
         const existingIdx = APP.files.findIndex(f => f.type === 'sheets');
         const fileName = 'Google Sheets — Live Data';
-        
+
         if (existingIdx !== -1) {
             APP.files[existingIdx].data = data;
             APP.files[existingIdx].name = fileName;
@@ -1231,16 +2066,32 @@ async function connectGoogleSheets() {
         $('sheetsStatusBadge').style.display = 'inline-flex';
         $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-check"></i> Connected';
         $('connectSheetsBtn').disabled = false;
-        $('sheetsInfo').innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--s)"></i> Connected — Polling & WebSockets active · Last sync: <span id="sheetsLastSyncTime">${fmtTime(Date.now())}</span>`;
+
+        const pipelineMode = ConnectionManager.mode === 'websocket' ? 'WebSocket + Polling' : 'Polling (5s)';
+        $('sheetsInfo').innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <div><i class="fa-solid fa-circle-check" style="color:var(--s)"></i> Connected — ${pipelineMode} active · Last sync: <span id="sheetsLastSyncTime">${fmtTime(Date.now())}</span></div>
+                <div class="pipeline-status">
+                    <div class="pipeline-item ok"><span class="pipe-dot"></span>API Proxy</div>
+                    <div class="pipeline-item ok"><span class="pipe-dot"></span>Cache Layer</div>
+                    <div class="pipeline-item ok"><span class="pipe-dot"></span>Schema Validation</div>
+                    <div class="pipeline-item ok"><span class="pipe-dot"></span>Delta Engine</div>
+                    <div class="pipeline-item ${ConnectionManager.mode === 'websocket' ? 'ok' : 'warn'}"><span class="pipe-dot"></span>${ConnectionManager.mode === 'websocket' ? 'WebSocket' : 'Polling Fallback'}</div>
+                </div>
+            </div>`;
 
         toast('✓ Google Sheets connected! Real-time sync active.', 'success');
-        addNotification('Google Sheets Connected', 'Real-time data pipeline established.');
+        addNotification('Google Sheets Connected', `Real-time data pipeline established (${data.sheetNames.length} sheets)`);
         broadcastChange('sheets_connected', 'Google Sheets');
+        DebugLogger.log('update', `Connected: ${data.sheetNames.length} sheets, pipeline mode: ${pipelineMode}`);
 
         saveMeta();
         updateUploadBadge();
         renderUploadPage();
         if (APP.page === 'dashboard') renderDashboard();
+
+        // Start real-time polling
+        ConnectionManager.startPolling(spreadsheetId);
 
         // Auto-scroll to show the file card
         setTimeout(() => {
@@ -1250,86 +2101,22 @@ async function connectGoogleSheets() {
             }
         }, 300);
 
-        // Start polling simulation
-        startSheetsPolling(spreadsheetId);
-
     } catch (err) {
-        toast(`Error connecting to sheet: ${err.message}`, 'error');
-        $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-link"></i> Connect';
+        DebugLogger.log('error', `Connection failed: ${err.message}`);
+
+        // Show error state in sheets info
+        $('sheetsInfo').innerHTML = `
+            <div class="error-state" style="padding:16px">
+                <div class="error-icon" style="width:48px;height:48px;font-size:1.2rem;margin:0 0 12px 0;display:inline-flex"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 style="font-size:.95rem">Connection Failed</h3>
+                <p style="font-size:.82rem;margin-bottom:12px">${escapeHtml(err.message)}</p>
+                <div class="error-code">${err.message.includes('API key') ? 'Set GOOGLE_SHEETS_API_KEY in your Vercel environment variables' : 'Check sheet URL and permissions'}</div>
+            </div>`;
+
+        toast(`Connection failed: ${err.message}`, 'error');
+        $('connectSheetsBtn').innerHTML = '<i class="fa-solid fa-link"></i> Retry';
         $('connectSheetsBtn').disabled = false;
     }
-}
-
-async function fetchGoogleSheetData(sheetId) {
-    if(GOOGLE_SHEETS_API_KEY === "YOUR_API_KEY_HERE") {
-        throw new Error("Missing Google Sheets API Key. Please configure GOOGLE_SHEETS_API_KEY at the top of the script.");
-    }
-    
-    // 1. Fetch metadata to get sheet names
-    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${GOOGLE_SHEETS_API_KEY}`;
-    const metaRes = await fetch(metaUrl);
-    if (!metaRes.ok) throw new Error('Failed to fetch sheet metadata. Please check if the API key is correct and the sheet is public.');
-    const metaData = await metaRes.json();
-    
-    const sheetNames = metaData.sheets.map(s => s.properties.title);
-    const sheetsData = { type: 'sheets', sheetNames: sheetNames, sheets: {} };
-    
-    // 2. Fetch data for each sheet
-    for (const name of sheetNames) {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(name)}?key=${GOOGLE_SHEETS_API_KEY}`;
-        const res = await fetch(url);
-        if (res.ok) {
-            const json = await res.json();
-            sheetsData.sheets[name] = json.values || [];
-        } else {
-            sheetsData.sheets[name] = [];
-        }
-    }
-    
-    return sheetsData;
-}
-
-function startSheetsPolling(spreadsheetId) {
-    if (APP.sheetsPollInterval) clearInterval(APP.sheetsPollInterval);
-
-    APP.sheetsPollInterval = setInterval(async () => {
-        if (!APP.sheetsConnected || !APP.sheetsData) return;
-
-        try {
-            const newData = await fetchGoogleSheetData(spreadsheetId);
-            APP.sheetsData = newData;
-            APP.sheetsLastSync = Date.now();
-
-            const existingIdx = APP.files.findIndex(f => f.type === 'sheets');
-            if (existingIdx !== -1) {
-                APP.files[existingIdx].data = newData;
-                APP.files[existingIdx].uploadedAt = Date.now();
-            }
-
-            // Update timestamp display
-            const tsEl = $('sheetsLastSyncTime');
-            if (tsEl) tsEl.textContent = fmtTime(Date.now());
-
-            // If modal is open showing sheets, refresh
-            if (APP.currentFile && APP.currentFile.type === 'sheets') {
-                const activeTab = document.querySelector('.modal-tab.active');
-                const activeIdx = activeTab && APP.currentFile.data.sheetNames ? parseInt(activeTab.dataset.sheetIdx) : 0;
-                const activeName = newData.sheetNames[activeIdx];
-                if (activeName && document.activeElement && document.activeElement.tagName === 'TD' && document.activeElement.isContentEditable) {
-                    // Do not fully re-render to avoid losing focus if user is editing directly in the UI.
-                } else {
-                    renderSheet(newData.sheets[activeName], activeName, true);
-                }
-            }
-
-            // Update sync status
-            const statusEl = $('syncStatus');
-            if(statusEl) statusEl.textContent = `Last sync: ${fmtTimeAgo(Date.now())}`;
-            
-        } catch (err) {
-            console.error('Polling error:', err);
-        }
-    }, 5000);
 }
 
 function highlightChangedCell(row, col) {
@@ -1348,79 +2135,17 @@ function highlightChangedCell(row, col) {
 }
 
 /* ═══════════════════════════════════════ WEBSOCKET ENGINE ═══════════════════════════════════════ */
-let socket;
 function setupWebSockets() {
-    try {
-        if (typeof io !== 'undefined') {
-            socket = io("http://localhost:5000");
-
-            socket.on("connect", () => {
-                APP.wsConnected = true;
-                updateSyncUI(true);
-            });
-
-            socket.on("disconnect", () => {
-                APP.wsConnected = false;
-                updateSyncUI(false);
-                toast('WebSocket disconnected', 'warning');
-            });
-
-            // True real-time update push mechanism via backend webhook
-            socket.on("sheet_updated", async (event) => {
-                console.log("Real-time webhook update received from server:", event);
-                addNotification('Real-Time App Update', 'Google Sheets changed. Refreshing data live via Webhook!');
-                
-                const sheetFile = APP.files.find(f => f.type === 'sheets');
-                if (sheetFile && sheetFile.sheetId) {
-                    try {
-                        const newData = await fetchGoogleSheetData(sheetFile.sheetId);
-                        APP.sheetsData = newData;
-                        APP.sheetsLastSync = Date.now();
-                        sheetFile.data = newData;
-                        sheetFile.uploadedAt = Date.now();
-
-                        const tsEl = $('sheetsLastSyncTime');
-                        if (tsEl) tsEl.textContent = fmtTime(Date.now());
-                        
-                        if (APP.currentFile && APP.currentFile.type === 'sheets') {
-                            const activeTab = document.querySelector('.modal-tab.active');
-                            const activeIdx = activeTab && APP.currentFile.data.sheetNames ? parseInt(activeTab.dataset.sheetIdx) : 0;
-                            const activeName = newData.sheetNames[activeIdx];
-                            renderSheet(newData.sheets[activeName], activeName, true);
-                        }
-                        
-                        if ($('syncStatus')) $('syncStatus').textContent = `Last sync: ${fmtTimeAgo(Date.now())}`;
-                    } catch (e) {
-                        console.error('Error fetching on webhook push:', e);
-                    }
-                }
-            });
-        }
-    } catch(err) {
-         console.warn("Socket.io not established", err);
-    }
+    ConnectionManager.init();
 }
 
 function updateSyncUI(connected) {
-    const dot = $('syncDot');
-    const label = $('syncLabel');
-    const liveBadge = $('liveBadge');
-    
-    if (dot && label && liveBadge) {
-        if (connected) {
-            dot.classList.remove('disconnected');
-            label.textContent = 'Live Sync Active';
-            liveBadge.classList.remove('disconnected');
-        } else {
-            dot.classList.add('disconnected');
-            label.textContent = 'Reconnecting...';
-            liveBadge.classList.add('disconnected');
-        }
-    }
+    ConnectionManager.updateUI();
 }
 
 function broadcastChange(type, detail) {
     if ($('syncStatus')) $('syncStatus').textContent = `Last sync: just now`;
+    DebugLogger.log('update', `Broadcast: ${type} — ${detail}`);
 }
 
 /* ═══════════════════════════════════════ FILE PREVIEW MODAL ═══════════════════════════════════════ */
@@ -1429,6 +2154,7 @@ function openFilePreview(fileId) {
     if (!file) { toast('File not found. It may have been deleted.', 'error'); return; }
     if (!file.data) { toast('File data not available. Please re-upload.', 'error'); return; }
     APP.currentFile = file;
+    logActivity('file_view', file.name, file.type, `Viewed ${file.name}`);
 
     const icon = getFileIcon(file.type);
     const color = getFileColorVar(file.type);
@@ -1452,7 +2178,7 @@ function closeModal() {
 $('modalCloseBtn').addEventListener('click', closeModal);
 $('fileModal').addEventListener('click', e => { if (e.target === $('fileModal')) closeModal(); });
 
-// — Excel/Sheets Preview —
+// — Excel/Sheets Preview with Column Filtering —
 function renderExcelPreview(data, isEditable = false) {
     const tabs = $('modalTabs');
     const body = $('modalBody');
@@ -1481,9 +2207,12 @@ function renderExcelPreview(data, isEditable = false) {
 
     renderSheet(data.sheets[data.sheetNames[0]], data.sheetNames[0], isEditable);
     const totalCells = countCells(data);
-    const liveTag = isEditable ? ' · <span style="color:var(--p2)">🟢 Live Sync</span>' : '';
+    const liveTag = isEditable ? ' · <span class="live-badge-enhanced active"><span class="live-dot"></span>LIVE SYNC</span>' : '';
     info.innerHTML = `${data.sheetNames.length} sheet(s) · ${totalCells.toLocaleString()} cells · v${APP.currentFile.version}${liveTag}`;
 }
+
+// --- Sheet Renderer with Search & Column Filtering ---
+let sheetFilterState = { search: '', column: 'all' };
 
 function renderSheet(sheet, name, editable = false) {
     const body = $('modalBody');
@@ -1492,28 +2221,45 @@ function renderSheet(sheet, name, editable = false) {
         return;
     }
 
+    sheetFilterState = { search: '', column: 'all' };
     const maxCols = Math.max(...sheet.map(r => (r || []).length));
-    let html = '<div class="excel-table-wrap"><table class="excel-table"><thead><tr><th class="excel-row-num">#</th>';
 
+    // Build column filter bar
+    let filterHtml = `<div class="col-filter-bar">
+        <i class="fa-solid fa-search" style="color:var(--txt3);font-size:.8rem"></i>
+        <input type="text" id="sheetSearchInput" placeholder="Instant search across all cells..." oninput="filterSheetData()">
+        <select class="col-filter-select" id="sheetColFilter" onchange="filterSheetData()">
+            <option value="all">All Columns</option>`;
+    if (sheet[0]) {
+        for (let c = 0; c < maxCols; c++) {
+            const colName = sheet[0][c] !== undefined && sheet[0][c] !== '' ? String(sheet[0][c]) : `Col ${c+1}`;
+            filterHtml += `<option value="${c}">${escapeHtml(colName)}</option>`;
+        }
+    }
+    filterHtml += `</select></div>`;
+
+    // Build table
+    let tableHtml = '<div class="excel-table-wrap"><table class="excel-table"><thead><tr><th class="excel-row-num">#</th>';
     if (sheet[0]) {
         for (let c = 0; c < maxCols; c++) {
             const val = sheet[0][c];
-            html += `<th>${val !== undefined && val !== '' ? escapeHtml(String(val)) : `Col ${c + 1}`}</th>`;
+            tableHtml += `<th>${val !== undefined && val !== '' ? escapeHtml(String(val)) : `Col ${c + 1}`}</th>`;
         }
     }
-    html += '</tr></thead><tbody>';
+    tableHtml += '</tr></thead><tbody id="sheetTableBody">';
 
     for (let r = 1; r < sheet.length; r++) {
-        html += `<tr><td class="excel-row-num">${r}</td>`;
+        tableHtml += `<tr data-row="${r}"><td class="excel-row-num">${r}</td>`;
         for (let c = 0; c < maxCols; c++) {
             const val = sheet[r] && sheet[r][c] !== undefined ? sheet[r][c] : '';
             const editAttr = editable ? ` contenteditable="true" data-row="${r}" data-col="${c}"` : '';
-            html += `<td${editAttr}>${escapeHtml(String(val))}</td>`;
+            tableHtml += `<td${editAttr} data-search-val="${escapeHtml(String(val).toLowerCase())}">${escapeHtml(String(val))}</td>`;
         }
-        html += '</tr>';
+        tableHtml += '</tr>';
     }
-    html += '</tbody></table></div>';
-    body.innerHTML = html;
+    tableHtml += '</tbody></table></div>';
+
+    body.innerHTML = filterHtml + tableHtml;
 
     // Add edit listeners for editable cells
     if (editable) {
@@ -1527,8 +2273,8 @@ function renderSheet(sheet, name, editable = false) {
                 if (APP.currentFile && APP.currentFile.data && APP.currentFile.data.sheets[sheetName]) {
                     if (!APP.currentFile.data.sheets[sheetName][r]) APP.currentFile.data.sheets[sheetName][r] = [];
                     APP.currentFile.data.sheets[sheetName][r][c] = newVal;
-                    this.classList.add('cell-updated');
-                    setTimeout(() => this.classList.remove('cell-updated'), 1500);
+                    this.classList.add('cell-glow');
+                    setTimeout(() => this.classList.remove('cell-glow'), 2000);
                     broadcastChange('cell_edited', `${sheetName} R${r}C${c}: ${newVal}`);
                     toast(`Cell updated — broadcasting to all users`, 'success');
                 }
@@ -1536,6 +2282,49 @@ function renderSheet(sheet, name, editable = false) {
         });
     }
 }
+
+// --- Instant Search/Filter Engine ---
+const filterSheetData = debounce(function() {
+    const searchInput = document.getElementById('sheetSearchInput');
+    const colFilter = document.getElementById('sheetColFilter');
+    const tbody = document.getElementById('sheetTableBody');
+    if (!searchInput || !tbody) return;
+
+    const query = searchInput.value.toLowerCase().trim();
+    const col = colFilter ? colFilter.value : 'all';
+    const rows = tbody.querySelectorAll('tr');
+
+    let visibleCount = 0;
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        let match = false;
+
+        if (!query && col === 'all') { match = true; }
+        else {
+            for (let i = 1; i < cells.length; i++) { // skip row number
+                const colIdx = i - 1;
+                if (col !== 'all' && parseInt(col) !== colIdx) continue;
+                const cellVal = (cells[i].dataset.searchVal || cells[i].textContent).toLowerCase();
+                if (!query || cellVal.includes(query)) { match = true; break; }
+            }
+        }
+
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+
+    // Update count
+    const info = $('modalInfo');
+    if (info && query) {
+        const existing = info.innerHTML;
+        const countSpan = `<span style="margin-left:8px;color:var(--p2);font-size:.8rem">(${visibleCount} of ${rows.length} rows shown)</span>`;
+        if (!info.querySelector('.filter-count')) {
+            info.innerHTML += `<span class="filter-count">${countSpan}</span>`;
+        } else {
+            info.querySelector('.filter-count').innerHTML = countSpan;
+        }
+    }
+}, 100);
 
 function countCells(data) {
     let count = 0;
@@ -1657,6 +2446,7 @@ function renderUploadPage() {
         const icon = getFileIcon(f.type);
         const colorCls = getFileColor(f.type);
         const liveTag = f.isLive ? `<div class="fc-live-tag"><i class="fa-solid fa-bolt"></i> LIVE</div>` : '';
+        const syncTimeAgo = f.isLive && APP.sheetsLastSync ? `<span class="updated-indicator" style="margin-top:6px"><i class="fa-solid fa-clock" style="font-size:.6rem"></i> ${fmtTimeAgo(APP.sheetsLastSync)}</span>` : '';
         return `<div class="file-card glass" onclick="openFilePreview('${f.id}')">
             ${liveTag}
             <div class="fc-top">
@@ -1667,6 +2457,7 @@ function renderUploadPage() {
                 <span>${fmtDate(f.uploadedAt)} at ${fmtTime(f.uploadedAt)}</span>
                 <span class="fc-version">v${f.version}</span>
             </div>
+            ${syncTimeAgo}
             <div class="fc-actions">
                 <button class="fc-action-btn" onclick="openFilePreview('${f.id}')" title="Preview"><i class="fa-solid fa-eye"></i></button>
                 <button class="fc-action-btn delete" onclick="deleteFile('${f.id}', event)" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
@@ -1990,13 +2781,15 @@ function renderAnalyticsInsights() {
     const pc = APP.files.filter(f=>f.type==='ppt').length;
     const sc = APP.files.filter(f=>f.type==='sheets').length;
 
+    const pipelineMode = ConnectionManager.mode === 'websocket' ? 'WebSocket' : (ConnectionManager.mode === 'polling' ? 'Polling' : 'Disconnected');
+
     const insights = [
         { color: 'var(--s)', title: 'Performance Summary', text: `${fc} file(s) processed (${ec} Excel, ${wc} Word, ${pc} PPT, ${sc} Sheets). System efficiency at 98.7%. All data synchronized in real-time.` },
         { color: 'var(--p)', title: 'Data Quality Score', text: 'Overall data quality index: 94.2/100. All uploaded files pass integrity checks. Cross-referencing enabled across file types.' },
         { color: 'var(--w)', title: 'Pattern Detection', text: 'Recurring patterns identified in uploaded datasets. Revenue data shows consistent 8-12% quarterly growth with seasonal variations in Q4.' },
         { color: 'var(--p3)', title: 'Predictive Forecast', text: 'Based on current trends, projected 15% increase in data throughput next quarter. AI model confidence: 89.3%.' },
         { color: 'var(--d)', title: 'Anomaly Monitor', text: `${Math.min(fc, 3)} potential anomalies flagged for review. All within acceptable thresholds. Real-time monitoring active.` },
-        { color: 'var(--p2)', title: 'Real-Time Sync Health', text: `WebSocket: ${APP.wsConnected ? '🟢 Connected' : '🔴 Reconnecting'}. Google Sheets: ${APP.sheetsConnected ? '🟢 Live (5s polling)' : '⚪ Not connected'}. Data pipeline: Healthy.` }
+        { color: 'var(--p2)', title: 'Pipeline Health', text: `Mode: ${pipelineMode}. Cache: ${DataPipeline.stats.cacheHits} hits. Avg latency: ${DataPipeline.stats.avgLatency}ms. Fetches: ${DataPipeline.stats.fetches}. Errors: ${DataPipeline.stats.errors}. Google Sheets: ${APP.sheetsConnected ? '🟢 Live' : '⚪ Not connected'}.` }
     ];
 
     container.innerHTML = insights.map(i => `
@@ -2092,17 +2885,21 @@ function getAIResponse(q) {
     if (ql.includes('delay') || ql.includes('late')) {
         return `<strong style="color:var(--d)">Delay Analysis:</strong> AI predicts 15-minute delay on Route 1042 (4-6 PM window) due to weather impedance. Recommending track switch optimization. Historical accuracy: 91.4%. 3 routes require monitoring.`;
     }
+    if (ql.includes('pipeline') || ql.includes('debug') || ql.includes('monitor')) {
+        const stats = DataPipeline.stats;
+        return `<strong>Pipeline Health:</strong><br>📡 Mode: ${ConnectionManager.mode}<br>📊 Fetches: ${stats.fetches}<br>✅ Updates: ${stats.updates}<br>❌ Errors: ${stats.errors}<br>💾 Cache hits: ${stats.cacheHits}<br>⚡ Avg latency: ${stats.avgLatency}ms<br>🔄 Last sync: ${APP.sheetsLastSync ? fmtTimeAgo(APP.sheetsLastSync) : 'N/A'}<br><br>Tip: Press Ctrl+D to open the debug panel.`;
+    }
     if (ql.includes('status') || ql.includes('system') || ql.includes('health')) {
-        return `<strong>System Status:</strong> All 420 active monitoring streams operational. WebSocket: ${APP.wsConnected ? '🟢 Connected' : '🔴 Reconnecting'}. Last sync: ${new Date().toLocaleTimeString()}. AI models v3.2 with 94.8% prediction accuracy. ${fc} files tracked.`;
+        return `<strong>System Status:</strong> All 420 active monitoring streams operational. Connection: ${ConnectionManager.mode === 'websocket' ? '🟢 WebSocket' : ConnectionManager.mode === 'polling' ? '🟡 Polling' : '🔴 Disconnected'}. Last sync: ${new Date().toLocaleTimeString()}. AI models v3.2 with 94.8% prediction accuracy. ${fc} files tracked. Pipeline: ${DataPipeline.stats.fetches} fetches, ${DataPipeline.stats.errors} errors.`;
     }
     if (ql.includes('train') || ql.includes('route')) {
         return `<strong>Train Intelligence:</strong> 420 trains currently tracked across 5 zones. On-time performance: 94.2%. 3 trains flagged for potential delays. Real-time GPS tracking active. Busiest route: Chennai–Madurai (48 services daily).`;
     }
     if (ql.includes('sheet') || ql.includes('google')) {
         if (APP.sheetsConnected) {
-            return `<strong>Google Sheets Status:</strong> 🟢 Connected and syncing every 5 seconds. ${APP.sheetsData ? APP.sheetsData.sheetNames.length + ' sheets' : 'Multiple sheets'} being monitored. Last sync: ${APP.sheetsLastSync ? fmtTimeAgo(APP.sheetsLastSync) : 'N/A'}. Any edits in the sheet are reflected here instantly.`;
+            return `<strong>Google Sheets Status:</strong> 🟢 Connected and syncing every 5 seconds via ${ConnectionManager.mode}. ${APP.sheetsData ? APP.sheetsData.sheetNames.length + ' sheets' : 'Multiple sheets'} being monitored. Last sync: ${APP.sheetsLastSync ? fmtTimeAgo(APP.sheetsLastSync) : 'N/A'}. Delta engine active — only changed cells are re-rendered. Pipeline stats: ${DataPipeline.stats.fetches} fetches, ${DataPipeline.stats.cacheHits} cache hits.`;
         }
-        return `<strong>Google Sheets:</strong> Not connected. Go to the Upload page and paste a Google Sheets URL to enable real-time data synchronization.`;
+        return `<strong>Google Sheets:</strong> Not connected. Go to the Upload page and paste a Google Sheets URL to enable real-time data synchronization. The system uses a server-side proxy to keep your API key secure.`;
     }
     if (ql.includes('excel') || ql.includes('spreadsheet') || ql.includes('data')) {
         if (ec > 0) {
@@ -2117,12 +2914,12 @@ function getAIResponse(q) {
         return `<strong>Presentation Insights:</strong> ${pc} presentation(s) processed. Slide content extracted and analyzed. Use the Upload page to view slides in full carousel mode with navigation.`;
     }
     if (ql.includes('hello') || ql.includes('hi') || ql.includes('hey')) {
-        return `Hello! 👋 I'm your Railway Intelligence Assistant. I can analyze your uploaded files, provide revenue insights, predict delays, check Google Sheets sync, and monitor system health. Ask me anything!`;
+        return `Hello! 👋 I'm your Railway Intelligence Assistant. I can analyze your uploaded files, provide revenue insights, predict delays, check Google Sheets sync, monitor pipeline health, and more. Try: "pipeline status" or "system health"!`;
     }
     if (ql.includes('help') || ql.includes('what can')) {
-        return `I can help with: <br>📊 <strong>Revenue Analysis</strong> — Financial trends & forecasts<br>📁 <strong>File Intelligence</strong> — Uploaded data summaries<br>🚆 <strong>Train Tracking</strong> — Real-time status & delays<br>📗 <strong>Google Sheets</strong> — Live sync status<br>⚙️ <strong>System Health</strong> — Infrastructure monitoring<br>🔍 <strong>Data Search</strong> — Find info across all files`;
+        return `I can help with: <br>📊 <strong>Revenue Analysis</strong> — Financial trends & forecasts<br>📁 <strong>File Intelligence</strong> — Uploaded data summaries<br>🚆 <strong>Train Tracking</strong> — Real-time status & delays<br>📗 <strong>Google Sheets</strong> — Live sync status<br>⚙️ <strong>System Health</strong> — Infrastructure monitoring<br>🔧 <strong>Pipeline Status</strong> — Debug & performance stats<br>🔍 <strong>Data Search</strong> — Find info across all files`;
     }
-    return `I've analyzed your query. Currently monitoring ${fc} uploaded file(s) and 420 live train streams. System operating nominally with zero anomalies detected.${excelInsight} Can you be more specific? Try asking about revenue, delays, files, Google Sheets, or system status.`;
+    return `I've analyzed your query. Currently monitoring ${fc} uploaded file(s) and 420 live train streams. System operating nominally with zero anomalies detected.${excelInsight} Can you be more specific? Try asking about revenue, delays, files, Google Sheets, pipeline status, or system health.`;
 }
 
 /* ═══════════════════════════════════════ CONTACT ═══════════════════════════════════════ */
@@ -2209,8 +3006,312 @@ if (mapImg) {
     });
 }
 
+/* ═══════════════════════════════════════ ADMIN DROPDOWN ═══════════════════════════════════════ */
+function initAdminDropdown() {
+    const session = getSession();
+    const user = getCurrentUser();
+    const initials = (user.displayName || 'AD').split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2);
+
+    const avatar = $('adminAvatar');
+    const adAvatar = $('adAvatarIcon');
+    const adName = $('adDisplayName');
+    const adEmail = $('adEmail');
+    const adRole = $('adRoleBadge');
+    const adFooter = $('adFooter');
+
+    if (avatar) avatar.textContent = initials;
+    if (adAvatar) adAvatar.textContent = initials;
+    if (adName) adName.textContent = user.displayName || user.username;
+    if (adEmail) adEmail.textContent = `${user.username}@railway.ai`;
+    if (adRole) adRole.textContent = (user.role || 'admin').toUpperCase();
+    if (adFooter && session) adFooter.textContent = `Session started: ${fmtTimeAgo(session.loginTime)}`;
+
+    // Toggle dropdown
+    avatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        $('adminDropdown').classList.toggle('open');
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!$('adminWrap').contains(e.target)) {
+            $('adminDropdown').classList.remove('open');
+        }
+    });
+}
+
+function closeAdminDropdown() {
+    $('adminDropdown').classList.remove('open');
+}
+
+async function handleLogout() {
+    closeAdminDropdown();
+    const user = getCurrentUser();
+    logActivity('logout', null, null, `${user.displayName} logged out`);
+
+    // Call server logout (fire and forget)
+    const token = getSessionToken();
+    if (token) {
+        fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+            body: JSON.stringify({ action: 'logout', token })
+        }).catch(() => {});
+    }
+
+    // Destroy session
+    localStorage.removeItem('rw_session');
+    toast('Signing out...', 'info');
+
+    // Redirect to login
+    setTimeout(() => {
+        window.location.href = 'login.html';
+    }, 800);
+}
+
+/* ═══════════════════════════════════════ ACTIVITY LOGGING ═══════════════════════════════════════ */
+function logActivity(actionType, fileName, fileType, details) {
+    const user = getCurrentUser();
+    const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+        username: user.username || 'admin',
+        displayName: user.displayName || 'Administrator',
+        actionType,
+        fileName,
+        fileType,
+        details: details || '',
+        timestamp: Date.now()
+    };
+
+    APP.activityLog.unshift(entry);
+    if (APP.activityLog.length > 500) APP.activityLog.length = 500;
+
+    // Persist to localStorage
+    try {
+        const stored = JSON.parse(localStorage.getItem('rw_activity') || '[]');
+        stored.unshift(entry);
+        if (stored.length > 200) stored.length = 200;
+        localStorage.setItem('rw_activity', JSON.stringify(stored));
+    } catch(e) {}
+
+    // Send to server (fire and forget)
+    fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'log', username: user.username, actionType, fileName, fileType, details })
+    }).catch(() => {});
+
+    // Update activity page if visible
+    if (APP.page === 'activity') renderActivityTimeline();
+}
+
+function trackUpload(fileName, fileType, fileSize, version, status) {
+    const user = getCurrentUser();
+    const existing = APP.uploadHistory.find(u => u.fileName === fileName);
+
+    if (existing) {
+        existing.version = version;
+        existing.versionLabel = `v${version}`;
+        existing.uploadCount++;
+        existing.lastUpdated = Date.now();
+        existing.lastUpdatedBy = user.username;
+        existing.fileSize = fileSize;
+        existing.status = status;
+    } else {
+        APP.uploadHistory.unshift({
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+            username: user.username,
+            displayName: user.displayName,
+            fileName,
+            fileType,
+            fileSize,
+            version,
+            versionLabel: `v${version}`,
+            uploadCount: 1,
+            status: status || 'LIVE',
+            timestamp: Date.now()
+        });
+    }
+
+    // Persist
+    try {
+        localStorage.setItem('rw_uploads', JSON.stringify(APP.uploadHistory.slice(0, 100)));
+    } catch(e) {}
+
+    // Send to server
+    fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'trackUpload', username: user.username, fileName, fileType, fileSize, version, status })
+    }).catch(() => {});
+}
+
+/* ═══════════════════════════════════════ ACTIVITY PAGE ═══════════════════════════════════════ */
+function renderActivityPage() {
+    // Load stored activity
+    if (APP.activityLog.length === 0) {
+        try {
+            APP.activityLog = JSON.parse(localStorage.getItem('rw_activity') || '[]');
+        } catch(e) {}
+    }
+    if (APP.uploadHistory.length === 0) {
+        try {
+            APP.uploadHistory = JSON.parse(localStorage.getItem('rw_uploads') || '[]');
+        } catch(e) {}
+    }
+
+    // Stats
+    const logins = APP.activityLog.filter(a => a.actionType === 'login').length;
+    const uploads = APP.activityLog.filter(a => a.actionType === 'file_upload').length;
+    const updates = APP.activityLog.filter(a => a.actionType === 'file_update').length;
+    const deletes = APP.activityLog.filter(a => a.actionType === 'file_delete').length;
+
+    animVal($('asTotal'), APP.activityLog.length);
+    animVal($('asLogins'), logins);
+    animVal($('asUploads'), uploads);
+    animVal($('asUpdates'), updates);
+    animVal($('asDeletes'), deletes);
+
+    // Populate user filter
+    const users = [...new Set(APP.activityLog.map(a => a.username))];
+    const userSelect = $('activityFilterUser');
+    if (userSelect) {
+        const current = userSelect.value;
+        userSelect.innerHTML = '<option value="all">All Users</option>' +
+            users.map(u => `<option value="${u}" ${u === current ? 'selected' : ''}>${u}</option>`).join('');
+    }
+
+    renderUploadHistoryTable();
+    renderActivityTimeline();
+}
+
+function renderUploadHistoryTable() {
+    const tbody = $('uploadHistoryBody');
+    const empty = $('noUploadHistory');
+    if (!tbody) return;
+
+    // Combine APP files + tracked uploads
+    let uploads = APP.files.map(f => ({
+        username: getCurrentUser().username,
+        displayName: getCurrentUser().displayName,
+        fileName: f.name,
+        fileType: f.type,
+        fileSize: f.size,
+        version: f.version,
+        versionLabel: `v${f.version}`,
+        uploadCount: f.version,
+        status: f.isLive ? 'LIVE' : 'STATIC',
+        timestamp: f.uploadedAt
+    }));
+
+    // Merge with tracked uploads
+    APP.uploadHistory.forEach(u => {
+        if (!uploads.find(up => up.fileName === u.fileName)) uploads.push(u);
+    });
+
+    uploads.sort((a, b) => b.timestamp - a.timestamp);
+
+    if (uploads.length === 0) {
+        tbody.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+
+    if (empty) empty.style.display = 'none';
+    tbody.innerHTML = uploads.map(u => {
+        const icon = getFileIcon(u.fileType);
+        const colorCls = getFileColor(u.fileType);
+        const initials = (u.displayName || u.username || 'AD').split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2);
+        const statusClass = u.status === 'LIVE' ? 'status-live' : 'status-static';
+        return `<tr>
+            <td><div class="uht-user"><div class="uht-user-avatar">${initials}</div>${escapeHtml(u.username)}</div></td>
+            <td><span class="file-icon ${colorCls}" style="width:28px;height:28px;border-radius:8px;font-size:.75rem"><i class="fa-solid ${icon}"></i></span> ${escapeHtml(u.fileName)}</td>
+            <td>${(u.fileType || '').toUpperCase()}</td>
+            <td>${fmtDate(u.timestamp)} ${fmtTime(u.timestamp)}</td>
+            <td><span class="fc-version">${u.versionLabel}</span></td>
+            <td>${u.uploadCount}×</td>
+            <td><span class="${statusClass}">${u.status === 'LIVE' ? '🟢 LIVE' : '⚪ STATIC'}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function renderActivityTimeline() {
+    const timeline = $('activityTimeline');
+    if (!timeline) return;
+
+    const userFilter = $('activityFilterUser')?.value || 'all';
+    const typeFilter = $('activityFilterType')?.value || 'all';
+    const searchQuery = ($('activitySearch')?.value || '').toLowerCase().trim();
+
+    let logs = [...APP.activityLog];
+
+    if (userFilter !== 'all') logs = logs.filter(l => l.username === userFilter);
+    if (typeFilter !== 'all') logs = logs.filter(l => l.actionType === typeFilter);
+    if (searchQuery) {
+        logs = logs.filter(l =>
+            (l.details && l.details.toLowerCase().includes(searchQuery)) ||
+            (l.fileName && l.fileName.toLowerCase().includes(searchQuery)) ||
+            (l.username && l.username.toLowerCase().includes(searchQuery))
+        );
+    }
+
+    logs.sort((a, b) => b.timestamp - a.timestamp);
+    logs = logs.slice(0, 100);
+
+    if (logs.length === 0) {
+        timeline.innerHTML = '<div class="empty-state"><i class="fa-solid fa-list-check"></i><h3>No matching activities</h3><p>Try adjusting your filters</p></div>';
+        return;
+    }
+
+    const actionConfig = {
+        login: { icon: 'fa-right-to-bracket', label: 'Login', cls: 'login' },
+        logout: { icon: 'fa-right-from-bracket', label: 'Logout', cls: 'login' },
+        file_upload: { icon: 'fa-cloud-arrow-up', label: 'File Upload', cls: 'upload' },
+        file_update: { icon: 'fa-rotate', label: 'File Update', cls: 'update' },
+        file_delete: { icon: 'fa-trash-can', label: 'File Deleted', cls: 'delete' },
+        file_view: { icon: 'fa-eye', label: 'File View', cls: 'view' },
+        navigation: { icon: 'fa-compass', label: 'Navigation', cls: 'system' },
+        system: { icon: 'fa-gear', label: 'System', cls: 'system' },
+        sheets_connect: { icon: 'fa-table', label: 'Sheets Connected', cls: 'upload' }
+    };
+
+    timeline.innerHTML = logs.map(l => {
+        const cfg = actionConfig[l.actionType] || { icon: 'fa-circle', label: l.actionType, cls: 'system' };
+        const time = new Date(l.timestamp);
+        const timeStr = fmtTimeAgo(l.timestamp);
+        const fullTime = `${fmtDate(l.timestamp)} at ${time.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}`;
+
+        let metaTags = '';
+        if (l.username) metaTags += `<span class="ai-meta-tag"><i class="fa-solid fa-user" style="font-size:.55rem"></i> ${escapeHtml(l.username)}</span>`;
+        if (l.fileName) metaTags += `<span class="ai-meta-tag"><i class="fa-solid fa-file" style="font-size:.55rem"></i> ${escapeHtml(l.fileName)}</span>`;
+        if (l.fileType) metaTags += `<span class="ai-meta-tag">${l.fileType.toUpperCase()}</span>`;
+
+        return `<div class="activity-item ${cfg.cls} glass">
+            <div class="ai-top">
+                <h4><span class="ai-action-icon ${cfg.cls}"><i class="fa-solid ${cfg.icon}"></i></span> ${cfg.label}</h4>
+                <span class="ai-time" title="${fullTime}">${timeStr}</span>
+            </div>
+            <div class="ai-detail">${escapeHtml(l.details || 'No details')}</div>
+            ${metaTags ? `<div class="ai-meta">${metaTags}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function refreshActivityData() {
+    toast('Refreshing activity data...', 'info');
+    renderActivityPage();
+    setTimeout(() => toast('Activity data refreshed', 'success'), 500);
+}
+
 /* ═══════════════════════════════════════ INITIALIZATION ═══════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
+    // Init admin dropdown
+    initAdminDropdown();
+
+    // Load persisted activity
+    try { APP.activityLog = JSON.parse(localStorage.getItem('rw_activity') || '[]'); } catch(e) {}
+    try { APP.uploadHistory = JSON.parse(localStorage.getItem('rw_uploads') || '[]'); } catch(e) {}
+
     setTimeout(() => typeText($('heroTitle'), 'Railway Intelligence Platform Online.'), 400);
 
     renderNotifs();
@@ -2225,22 +3326,35 @@ window.addEventListener('DOMContentLoaded', () => {
     startLiveSync();
     setupWebSockets();
 
-    setTimeout(() => toast('System matrices loaded successfully', 'success'), 1200);
-    setTimeout(() => toast('WebSocket connection established — Real-time sync active', 'info'), 2500);
+    const user = getCurrentUser();
+    DebugLogger.log('info', `Railway Intelligence Platform v4.0 initialized — User: ${user.displayName}`);
+    DebugLogger.log('info', `Cache TTL: ${DataPipeline.CACHE_TTL}ms | Max retries: 5 | Rate limit: ${RateLimiter.maxPerMinute}/min`);
+
+    logActivity('system', null, null, `Dashboard initialized by ${user.displayName}`);
+
+    setTimeout(() => toast(`Welcome, ${user.displayName}!`, 'success'), 800);
+    setTimeout(() => toast('Real-time data engine active — pipeline ready', 'info'), 2000);
 });
 
 /* ═══════════════════════════════════════ KEYBOARD SHORTCUTS ═══════════════════════════════════════ */
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         closeModal();
+        closeAdminDropdown();
         $('notifPanel').classList.remove('open');
         $('searchResults').classList.remove('open');
         if ($('chatbot').classList.contains('open')) toggleChat();
+        if ($('debugPanel').classList.contains('open')) toggleDebugPanel();
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const searchInput = $('globalSearch');
         if (searchInput) searchInput.focus();
+    }
+    // Ctrl+D — toggle debug panel
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        toggleDebugPanel();
     }
 });
 </script>

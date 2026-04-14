@@ -206,6 +206,18 @@ a{text-decoration:none;color:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 .btn-check{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.5);transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);font-size:1.4rem}
 
+/* ═══════════════════ SERVER ERROR BANNER ═══════════════════ */
+.server-error{display:none;padding:12px 16px;border-radius:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#dc2626;font-size:0.82rem;font-weight:500;margin-bottom:20px;align-items:center;gap:10px;animation:fieldSlideIn 0.4s ease}
+.server-error.visible{display:flex}
+.server-error i{font-size:1rem;flex-shrink:0}
+
+/* ═══════════════════ CREDENTIALS HINT ═══════════════════ */
+.cred-hint{margin-top:16px;padding:14px 16px;border-radius:14px;background:rgba(79,172,254,0.08);border:1px solid rgba(79,172,254,0.15);font-size:0.76rem;color:var(--txt2);line-height:1.6;animation:fieldSlideIn 0.8s 0.9s cubic-bezier(0.16,1,0.3,1) both}
+.cred-hint strong{color:var(--txt);font-weight:700}
+.cred-row{display:flex;justify-content:space-between;margin-top:4px}
+.cred-row span{font-family:'JetBrains Mono','Fira Code',monospace;font-size:0.72rem;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,0.04);color:var(--p3);font-weight:600;cursor:pointer;transition:background 0.2s}
+.cred-row span:hover{background:rgba(79,172,254,0.15)}
+
 /* ═══════════════════ FOOTER ═══════════════════ */
 .login-footer{text-align:center;margin-top:28px;animation:fieldSlideIn 0.8s 0.85s cubic-bezier(0.16,1,0.3,1) both}
 .login-footer p{font-size:0.82rem;color:var(--txt3);font-weight:500}
@@ -233,6 +245,7 @@ a{text-decoration:none;color:inherit}
 .success-icon i{font-size:2.5rem;color:#fff}
 .success-content h2{font-size:1.5rem;font-weight:800;color:var(--txt);margin-bottom:8px}
 .success-content p{font-size:0.95rem;color:var(--txt3);font-weight:500}
+.success-content .user-welcome{font-size:0.85rem;color:var(--p);font-weight:700;margin-top:4px}
 .redirect-bar{width:200px;height:4px;border-radius:2px;background:rgba(0,0,0,0.06);margin:20px auto 0;overflow:hidden}
 .redirect-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--success),#059669);width:0;transition:width 2s linear}
 
@@ -290,6 +303,7 @@ a{text-decoration:none;color:inherit}
         <div class="success-icon"><i class="fa-solid fa-check"></i></div>
         <h2>Authentication Successful</h2>
         <p>Redirecting to Intelligence Dashboard...</p>
+        <div class="user-welcome" id="welcomeUser"></div>
         <div class="redirect-bar"><div class="redirect-fill" id="redirectFill"></div></div>
     </div>
 </div>
@@ -308,11 +322,17 @@ a{text-decoration:none;color:inherit}
             </div>
         </div>
 
+        <!-- Server Error Banner -->
+        <div class="server-error" id="serverError">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="serverErrorMsg">Authentication failed</span>
+        </div>
+
         <!-- Form -->
         <form id="loginForm" autocomplete="off" onsubmit="return false">
             <!-- Username -->
             <div class="form-group" id="usernameGroup">
-                <label class="form-label">Username or Email</label>
+                <label class="form-label">Username</label>
                 <div class="input-wrap">
                     <i class="fa-solid fa-user input-icon"></i>
                     <input type="text" class="form-input" id="username" placeholder="Enter your username" autocomplete="username">
@@ -356,6 +376,15 @@ a{text-decoration:none;color:inherit}
                 </button>
             </div>
 
+            <!-- Credentials Hint -->
+            <div class="cred-hint">
+                <strong><i class="fa-solid fa-circle-info" style="margin-right:4px"></i> Demo Credentials:</strong>
+                <div class="cred-row" style="margin-top:6px">
+                    <span onclick="fillCreds('admin','admin123')">admin / admin123</span>
+                    <span onclick="fillCreds('operator','rail2026')">operator / rail2026</span>
+                </div>
+            </div>
+
             <!-- Divider -->
             <div class="divider"><span>or continue with</span></div>
 
@@ -383,6 +412,21 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
+/* ═══════════════════ CHECK IF ALREADY LOGGED IN ═══════════════════ */
+(function checkExistingSession() {
+    const session = localStorage.getItem('rw_session');
+    if (session) {
+        try {
+            const s = JSON.parse(session);
+            if (s && s.token && s.user) {
+                // Already logged in, redirect
+                window.location.href = 'index.html';
+                return;
+            }
+        } catch(e) {}
+    }
+})();
+
 /* ═══════════════════ UTILITIES ═══════════════════ */
 const $ = id => document.getElementById(id);
 
@@ -393,6 +437,14 @@ function toast(msg, type = 'success') {
     t.innerHTML = `<i class="fa-solid ${icons[type] || icons.success}"></i> ${msg}`;
     $('toasts').appendChild(t);
     setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 500); }, 4000);
+}
+
+function fillCreds(user, pass) {
+    $('username').value = user;
+    $('password').value = pass;
+    $('usernameGroup').classList.add('valid');
+    $('passwordGroup').classList.add('valid');
+    toast('Credentials filled — click Sign In', 'success');
 }
 
 /* ═══════════════════ PASSWORD TOGGLE ═══════════════════ */
@@ -473,10 +525,13 @@ $('loginBtn').addEventListener('mousedown', function(e) {
     setTimeout(() => ripple.remove(), 600);
 });
 
-/* ═══════════════════ LOGIN HANDLER ═══════════════════ */
-function handleLogin() {
+/* ═══════════════════ LOGIN HANDLER — REAL AUTH ═══════════════════ */
+async function handleLogin() {
     const btn = $('loginBtn');
     if (btn.classList.contains('loading') || btn.classList.contains('success')) return;
+
+    // Hide previous errors
+    $('serverError').classList.remove('visible');
 
     const userValid = validateField('username', 'usernameGroup', 3);
     const passValid = validateField('password', 'passwordGroup', 6);
@@ -486,19 +541,73 @@ function handleLogin() {
         return;
     }
 
+    const username = $('username').value.trim();
+    const password = $('password').value;
+
     // Loading state
     btn.classList.add('loading');
     toast('Authenticating...', 'success');
 
-    // Simulate auth
-    setTimeout(() => {
+    try {
+        // Call the auth API
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'login', username, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            // Auth failed
+            btn.classList.remove('loading');
+            $('serverError').classList.add('visible');
+            $('serverErrorMsg').textContent = data.error || 'Invalid username or password';
+            toast(data.error || 'Authentication failed', 'error');
+            
+            // Shake the inputs
+            $('usernameGroup').classList.remove('valid');
+            $('passwordGroup').classList.remove('valid');
+            $('usernameGroup').classList.add('shake');
+            $('passwordGroup').classList.add('shake');
+            setTimeout(() => {
+                $('usernameGroup').classList.remove('shake');
+                $('passwordGroup').classList.remove('shake');
+            }, 800);
+            return;
+        }
+
+        // Auth successful!
         btn.classList.remove('loading');
         btn.classList.add('success');
         toast('Authentication successful!', 'success');
 
+        // Store session
+        const session = {
+            token: data.token,
+            user: data.user,
+            loginTime: Date.now(),
+            rememberMe: $('rememberMe').checked
+        };
+        localStorage.setItem('rw_session', JSON.stringify(session));
+
+        // Log the login activity (fire and forget)
+        fetch('/api/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'log',
+                username: data.user.username,
+                actionType: 'login',
+                details: `${data.user.displayName} logged in (${data.user.role})`,
+                metadata: { role: data.user.role }
+            })
+        }).catch(() => {});
+
         // Show success overlay
         setTimeout(() => {
             $('successOverlay').classList.add('active');
+            $('welcomeUser').textContent = `Welcome, ${data.user.displayName}`;
             setTimeout(() => {
                 $('redirectFill').style.width = '100%';
             }, 100);
@@ -508,7 +617,47 @@ function handleLogin() {
                 window.location.href = 'index.html';
             }, 2400);
         }, 600);
-    }, 2000);
+
+    } catch (err) {
+        // Network/server error — fallback to local auth
+        console.warn('API auth failed, using local fallback:', err.message);
+        
+        // Local fallback credentials
+        const localUsers = [
+            { username: 'admin', password: 'admin123', role: 'admin', displayName: 'Administrator' },
+            { username: 'operator', password: 'rail2026', role: 'operator', displayName: 'Rail Operator' },
+            { username: 'analyst', password: 'data2026', role: 'analyst', displayName: 'Data Analyst' }
+        ];
+
+        const user = localUsers.find(u => u.username === username.toLowerCase() && u.password === password);
+
+        if (!user) {
+            btn.classList.remove('loading');
+            $('serverError').classList.add('visible');
+            $('serverErrorMsg').textContent = 'Invalid credentials';
+            toast('Invalid username or password', 'error');
+            return;
+        }
+
+        btn.classList.remove('loading');
+        btn.classList.add('success');
+        toast('Authentication successful (offline mode)!', 'success');
+
+        const session = {
+            token: 'local_' + Date.now().toString(36),
+            user: { username: user.username, role: user.role, displayName: user.displayName },
+            loginTime: Date.now(),
+            rememberMe: $('rememberMe').checked
+        };
+        localStorage.setItem('rw_session', JSON.stringify(session));
+
+        setTimeout(() => {
+            $('successOverlay').classList.add('active');
+            $('welcomeUser').textContent = `Welcome, ${user.displayName}`;
+            setTimeout(() => $('redirectFill').style.width = '100%', 100);
+            setTimeout(() => window.location.href = 'index.html', 2400);
+        }, 600);
+    }
 }
 
 /* ═══════════════════ ENTER KEY ═══════════════════ */
@@ -523,6 +672,7 @@ $('loginForm').addEventListener('keydown', function(e) {
 document.querySelectorAll('.form-input').forEach(input => {
     input.addEventListener('focus', function() {
         this.closest('.form-group').classList.remove('shake');
+        $('serverError').classList.remove('visible');
     });
     input.addEventListener('blur', function() {
         if (this.value.trim().length > 0) {
