@@ -478,7 +478,7 @@ function handleLogin() {
     const btn = $('loginBtn');
     if (btn.classList.contains('loading') || btn.classList.contains('success')) return;
 
-    const userValid = validateField('username', 'Mari@2003', 3);
+    const userValid = validateField('username', 'Mari@2001', 3);
     const passValid = validateField('password', 'Mari@9087', 6);
 
     const valUser = $('username').value.trim();
